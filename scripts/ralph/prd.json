@@ -21,7 +21,7 @@
         "Application context loads in test: @SpringBootTest test passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "No TDD — pure scaffolding. Verify by compiling and context load test."
     },
     {

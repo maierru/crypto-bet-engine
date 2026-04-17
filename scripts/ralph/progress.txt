@@ -1,3 +1,23 @@
 # Ralph Progress Log
 Started: Sat Apr 18 00:34:32 WEST 2026
+
+## Codebase Patterns
+- Gradle Kotlin DSL with foojay toolchain resolver for Java 21 auto-provisioning
+- Test profile: H2 in-memory DB (PostgreSQL mode), embedded Redis on port 16379
+- EmbeddedRedisConfig in test sources auto-starts Redis for @SpringBootTest with @ActiveProfiles("test")
+- Flyway disabled in test profile, ddl-auto=create-drop used instead
+
+---
+
+## 2026-04-18 00:37 - US-001
+- Spring Boot 3.4.4 project scaffolded with Java 21, Gradle Kotlin DSL
+- All required dependencies added (web, jpa, websocket, redis, actuator, flyway, postgres)
+- application.yml (local), application-test.yml (H2+embedded-redis), application-prod.yml (env vars)
+- Virtual threads enabled, actuator health endpoint exposed
+- @SpringBootTest context load test passes
+- Files changed: build.gradle.kts, settings.gradle.kts, gradlew, application*.yml, CryptoBetEngineApplication.java, CryptoBetEngineApplicationTest.java, EmbeddedRedisConfig.java
+- **Learnings for future iterations:**
+  - embedded-redis (codemonstur) throws IOException on start/stop — must declare in method signature
+  - Java 21 not installed locally — foojay-resolver-convention plugin in settings.gradle.kts enables auto-provisioning
+  - H2 with MODE=PostgreSQL for test compatibility
 ---
