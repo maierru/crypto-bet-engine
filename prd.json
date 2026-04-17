@@ -16,7 +16,7 @@
     {
       "id": "US-003",
       "title": "Bet Entity and Placement API",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-004",

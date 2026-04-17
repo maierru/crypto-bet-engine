@@ -44,3 +44,27 @@
   - EmbeddedRedisConfig needs port-availability check for safety
   - Pessimistic locking with `@Lock(PESSIMISTIC_WRITE)` on custom query method works well for concurrent safety
 ---
+
+## 2026-04-18 - US-003
+- Bet entity with UUID PK, wallet FK, symbol, direction (UP/DOWN), stake, entryPrice, status (OPEN/WON/LOST/CANCELLED)
+- REST API: POST /api/bets (place bet), GET /api/bets/{id} (get bet)
+- Placing a bet deducts stake from wallet using pessimistic locking
+- Flyway migration V2 for bets table with indexes on wallet_id and status
+- TDD: 8 tests (place bet, balance deduction, insufficient balance, invalid wallet, zero/negative stake, get bet, get nonexistent)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/bet/Bet.java
+  - src/main/java/com/cryptobet/engine/bet/BetDirection.java
+  - src/main/java/com/cryptobet/engine/bet/BetStatus.java
+  - src/main/java/com/cryptobet/engine/bet/BetRepository.java
+  - src/main/java/com/cryptobet/engine/bet/BetService.java
+  - src/main/java/com/cryptobet/engine/bet/BetController.java
+  - src/main/java/com/cryptobet/engine/bet/BetNotFoundException.java
+  - src/main/java/com/cryptobet/engine/bet/dto/PlaceBetRequest.java
+  - src/main/java/com/cryptobet/engine/bet/dto/BetResponse.java
+  - src/main/resources/db/migration/V2__create_bets_table.sql
+  - src/test/java/com/cryptobet/engine/bet/BetControllerTest.java
+- **Learnings for future iterations:**
+  - Bet placement reuses wallet's pessimistic lock via `findByIdForUpdate()` + `deductStake()` for atomic balance deduction
+  - BetController handles both BetNotFoundException and WalletNotFoundException with separate @ExceptionHandler methods
+  - Direction passed as string in request, parsed to enum in service — keeps DTOs simple
+---
