@@ -1,0 +1,46 @@
+## Codebase Patterns
+- Spring Boot 3.4.4 with Java 21, Gradle Kotlin DSL
+- Tests use H2 (PostgreSQL mode) + embedded Redis on port 16379
+- Test profile: `@ActiveProfiles("test")`, config in `application-test.yml`
+- Flyway disabled in tests, using `ddl-auto: create-drop` with H2
+- All monetary values: `BigDecimal` in Java, `DECIMAL(19,4)` in PostgreSQL
+- Package: `com.cryptobet.engine`
+- UUID primary keys everywhere
+- All `@SpringBootTest` classes MUST include `@AutoConfigureMockMvc` to share context and avoid embedded Redis port conflicts
+- Monetary amounts serialized as strings via `@JsonFormat(shape = STRING)` with `setScale(2)` in response DTOs
+- Wallet balance mutations use pessimistic locking via `findByIdForUpdate()` (SELECT FOR UPDATE)
+- Feature packages: `com.cryptobet.engine.<feature>` with `dto` sub-package for request/response records
+
+---
+
+## 2026-04-17 - US-001
+- Spring Boot project scaffolded with all required dependencies
+- Files: build.gradle.kts, application.yml, application-prod.yml, application-test.yml, EmbeddedRedisConfig, main app class
+- **Learnings for future iterations:**
+  - Embedded Redis config uses `@Profile("test")` to avoid conflicts
+  - H2 runs in PostgreSQL compatibility mode for tests
+  - Virtual threads enabled via `spring.threads.virtual.enabled=true`
+---
+
+## 2026-04-18 - US-002
+- Wallet entity with UUID PK, BigDecimal balance, pessimistic locking
+- REST API: POST /api/wallets, GET /api/wallets/{id}, POST /api/wallets/{id}/deposit
+- Flyway migration V1 for wallets table
+- TDD: 7 tests (create, get, deposit, zero/negative validation, 404, concurrent deposits)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/wallet/Wallet.java
+  - src/main/java/com/cryptobet/engine/wallet/WalletRepository.java
+  - src/main/java/com/cryptobet/engine/wallet/WalletService.java
+  - src/main/java/com/cryptobet/engine/wallet/WalletController.java
+  - src/main/java/com/cryptobet/engine/wallet/WalletNotFoundException.java
+  - src/main/java/com/cryptobet/engine/wallet/dto/CreateWalletRequest.java
+  - src/main/java/com/cryptobet/engine/wallet/dto/DepositRequest.java
+  - src/main/java/com/cryptobet/engine/wallet/dto/WalletResponse.java
+  - src/main/resources/db/migration/V1__create_wallets_table.sql
+  - src/test/java/com/cryptobet/engine/wallet/WalletControllerTest.java
+- **Learnings for future iterations:**
+  - BigDecimal serialization: use `@JsonFormat(shape = STRING)` + `setScale(2)` for consistent "100.00" format
+  - All @SpringBootTest classes need @AutoConfigureMockMvc to share context — avoids embedded Redis port conflicts
+  - EmbeddedRedisConfig needs port-availability check for safety
+  - Pessimistic locking with `@Lock(PESSIMISTIC_WRITE)` on custom query method works well for concurrent safety
+---

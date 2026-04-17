@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 
 @Configuration
 @Profile("test")
@@ -20,14 +21,24 @@ public class EmbeddedRedisConfig {
 
     @PostConstruct
     public void start() throws IOException {
-        redisServer = new RedisServer(redisPort);
-        redisServer.start();
+        if (isPortAvailable(redisPort)) {
+            redisServer = new RedisServer(redisPort);
+            redisServer.start();
+        }
     }
 
     @PreDestroy
     public void stop() throws IOException {
         if (redisServer != null && redisServer.isActive()) {
             redisServer.stop();
+        }
+    }
+
+    private boolean isPortAvailable(int port) {
+        try (ServerSocket socket = new ServerSocket(port)) {
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }

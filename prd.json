@@ -1,0 +1,67 @@
+{
+  "projectName": "Crypto Bet Engine",
+  "branchName": "ralph/crypto-bet-engine",
+  "description": "Real-time crypto betting engine with Java 21 / Spring Boot",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Spring Boot Project Scaffolding",
+      "passes": true
+    },
+    {
+      "id": "US-002",
+      "title": "Wallet Entity and REST API",
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "Bet Entity and Placement API",
+      "passes": false
+    },
+    {
+      "id": "US-004",
+      "title": "Odds Calculation with Vigorish",
+      "passes": false
+    },
+    {
+      "id": "US-005",
+      "title": "Exposure Tracking via Redis",
+      "passes": false
+    },
+    {
+      "id": "US-006",
+      "title": "Binance WebSocket Price Feed",
+      "passes": false
+    },
+    {
+      "id": "US-007",
+      "title": "Settlement Scheduler",
+      "passes": false
+    },
+    {
+      "id": "US-008",
+      "title": "WebSocket Price Push to Clients",
+      "passes": false
+    },
+    {
+      "id": "US-009",
+      "title": "Bet Status and History API",
+      "passes": false
+    },
+    {
+      "id": "US-010",
+      "title": "WebSocket Bet Updates",
+      "passes": false
+    },
+    {
+      "id": "US-011",
+      "title": "Global Error Handling and Validation",
+      "passes": false
+    },
+    {
+      "id": "US-012",
+      "title": "Production Configuration and CI",
+      "passes": false
+    }
+  ]
+}
