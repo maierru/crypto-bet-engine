@@ -21,7 +21,7 @@
     {
       "id": "US-004",
       "title": "Odds Calculation with Vigorish",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-005",

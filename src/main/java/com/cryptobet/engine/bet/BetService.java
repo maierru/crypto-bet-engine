@@ -2,6 +2,7 @@ package com.cryptobet.engine.bet;
 
 import com.cryptobet.engine.bet.dto.BetResponse;
 import com.cryptobet.engine.bet.dto.PlaceBetRequest;
+import com.cryptobet.engine.odds.OddsService;
 import com.cryptobet.engine.wallet.WalletNotFoundException;
 import com.cryptobet.engine.wallet.WalletRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,12 @@ public class BetService {
 
     private final BetRepository betRepository;
     private final WalletRepository walletRepository;
+    private final OddsService oddsService;
 
-    public BetService(BetRepository betRepository, WalletRepository walletRepository) {
+    public BetService(BetRepository betRepository, WalletRepository walletRepository, OddsService oddsService) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
+        this.oddsService = oddsService;
     }
 
     @Transactional
@@ -36,6 +39,8 @@ public class BetService {
         walletRepository.save(wallet);
 
         var bet = new Bet(request.walletId(), request.symbol(), direction, request.stake(), request.entryPrice());
+        bet.setOdds(oddsService.calculateOdds());
+        bet.setPotentialPayout(oddsService.calculatePotentialPayout(request.stake()));
         bet = betRepository.save(bet);
 
         return BetResponse.from(bet);

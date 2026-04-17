@@ -15,6 +15,10 @@ public record BetResponse(
         BigDecimal stake,
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         BigDecimal entryPrice,
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        BigDecimal odds,
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        BigDecimal potentialPayout,
         String status
 ) {
 
@@ -26,6 +30,8 @@ public record BetResponse(
                 bet.getDirection().name(),
                 bet.getStake().setScale(2),
                 bet.getEntryPrice().setScale(2),
+                bet.getOdds().setScale(4),
+                bet.getPotentialPayout().setScale(2),
                 bet.getStatus().name()
         );
     }

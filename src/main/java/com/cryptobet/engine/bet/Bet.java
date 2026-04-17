@@ -30,6 +30,12 @@ public class Bet {
     @Column(name = "entry_price", nullable = false, precision = 19, scale = 4)
     private BigDecimal entryPrice;
 
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal odds = BigDecimal.ZERO;
+
+    @Column(name = "potential_payout", nullable = false, precision = 19, scale = 4)
+    private BigDecimal potentialPayout = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private BetStatus status = BetStatus.OPEN;
@@ -68,9 +74,19 @@ public class Bet {
     public BetDirection getDirection() { return direction; }
     public BigDecimal getStake() { return stake; }
     public BigDecimal getEntryPrice() { return entryPrice; }
+    public BigDecimal getOdds() { return odds; }
+    public BigDecimal getPotentialPayout() { return potentialPayout; }
     public BetStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public void setOdds(BigDecimal odds) {
+        this.odds = odds.setScale(4, RoundingMode.HALF_UP);
+    }
+
+    public void setPotentialPayout(BigDecimal potentialPayout) {
+        this.potentialPayout = potentialPayout.setScale(4, RoundingMode.HALF_UP);
+    }
 
     public void setStatus(BetStatus status) {
         this.status = status;

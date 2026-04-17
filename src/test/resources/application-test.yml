@@ -17,3 +17,6 @@ spring:
     redis:
       host: localhost
       port: 16379
+
+betting:
+  vig-rate: 0.05
