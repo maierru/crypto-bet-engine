@@ -17,8 +17,8 @@ public class WalletService {
     }
 
     @Transactional
-    public WalletResponse createWallet(BigDecimal initialBalance) {
-        var wallet = new Wallet(initialBalance);
+    public WalletResponse createWallet(BigDecimal initialBalance, String nickname) {
+        var wallet = new Wallet(initialBalance, nickname);
         wallet = walletRepository.save(wallet);
         return WalletResponse.from(wallet);
     }

@@ -1,23 +1,27 @@
 # Ralph Progress Log
-Started: Sat Apr 18 00:34:32 WEST 2026
-
-## Codebase Patterns
-- Gradle Kotlin DSL with foojay toolchain resolver for Java 21 auto-provisioning
-- Test profile: H2 in-memory DB (PostgreSQL mode), embedded Redis on port 16379
-- EmbeddedRedisConfig in test sources auto-starts Redis for @SpringBootTest with @ActiveProfiles("test")
-- Flyway disabled in test profile, ddl-auto=create-drop used instead
-
+Started: Sat Apr 18 01:50:57 WEST 2026
 ---
 
-## 2026-04-18 00:37 - US-001
-- Spring Boot 3.4.4 project scaffolded with Java 21, Gradle Kotlin DSL
-- All required dependencies added (web, jpa, websocket, redis, actuator, flyway, postgres)
-- application.yml (local), application-test.yml (H2+embedded-redis), application-prod.yml (env vars)
-- Virtual threads enabled, actuator health endpoint exposed
-- @SpringBootTest context load test passes
-- Files changed: build.gradle.kts, settings.gradle.kts, gradlew, application*.yml, CryptoBetEngineApplication.java, CryptoBetEngineApplicationTest.java, EmbeddedRedisConfig.java
+## Codebase Patterns
+- Wallet entity uses `@PrePersist`/`@PreUpdate` for timestamps — no need to set manually
+- DTOs are Java records; adding fields requires updating all constructor calls in tests
+- WalletResponse uses `@JsonInclude(NON_NULL)` for optional fields — null fields are omitted from JSON
+- Flyway migrations are in `src/main/resources/db/migration/` with `V<n>__` naming
+- Tests use `@SpringBootTest` + `@AutoConfigureMockMvc` + `@ActiveProfiles("test")` with H2 in-memory DB
+- WalletService accepts primitives (not DTOs) — controller unwraps request records before calling service
+
+## 2026-04-18 - US-F01
+- Added nickname field to wallet backend (nullable VARCHAR(50))
+- Files changed:
+  - `src/main/resources/db/migration/V5__add_nickname_to_wallets.sql` (new)
+  - `src/main/java/com/cryptobet/engine/wallet/Wallet.java` (field, getter, constructor)
+  - `src/main/java/com/cryptobet/engine/wallet/dto/CreateWalletRequest.java` (added nickname param)
+  - `src/main/java/com/cryptobet/engine/wallet/dto/WalletResponse.java` (added nickname + @JsonInclude)
+  - `src/main/java/com/cryptobet/engine/wallet/WalletService.java` (pass nickname through)
+  - `src/main/java/com/cryptobet/engine/wallet/WalletController.java` (pass nickname through)
+  - `src/test/java/com/cryptobet/engine/wallet/WalletControllerTest.java` (2 new tests + updated constructors)
 - **Learnings for future iterations:**
-  - embedded-redis (codemonstur) throws IOException on start/stop — must declare in method signature
-  - Java 21 not installed locally — foojay-resolver-convention plugin in settings.gradle.kts enables auto-provisioning
-  - H2 with MODE=PostgreSQL for test compatibility
+  - CreateWalletRequest is a record — adding a field changes the canonical constructor, requiring all test usages to be updated
+  - Used `@JsonInclude(NON_NULL)` on nickname in WalletResponse so null nicknames are omitted from JSON (not sent as `"nickname": null`)
+  - Kept nickname optional (no @NotNull) for backwards compatibility
 ---

@@ -17,6 +17,9 @@ public class Wallet {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal balance;
 
+    @Column(length = 50)
+    private String nickname;
+
     @Column(nullable = false, length = 10)
     private String currency = "USD";
 
@@ -29,8 +32,13 @@ public class Wallet {
     protected Wallet() {}
 
     public Wallet(BigDecimal initialBalance) {
+        this(initialBalance, null);
+    }
+
+    public Wallet(BigDecimal initialBalance, String nickname) {
         this.balance = initialBalance.setScale(4, java.math.RoundingMode.HALF_UP);
         this.currency = "USD";
+        this.nickname = nickname;
     }
 
     @PrePersist
@@ -46,6 +54,7 @@ public class Wallet {
 
     public UUID getId() { return id; }
     public BigDecimal getBalance() { return balance; }
+    public String getNickname() { return nickname; }
     public String getCurrency() { return currency; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

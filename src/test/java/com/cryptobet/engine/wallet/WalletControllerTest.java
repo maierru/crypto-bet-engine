@@ -37,7 +37,7 @@ class WalletControllerTest {
 
     @Test
     void createWallet_returns201WithUuidAndInitialBalance() throws Exception {
-        var request = new CreateWalletRequest(new BigDecimal("100.00"));
+        var request = new CreateWalletRequest(new BigDecimal("100.00"), null);
 
         mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -45,13 +45,53 @@ class WalletControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.balance").value("100.00"))
-                .andExpect(jsonPath("$.currency").value("USD"));
+                .andExpect(jsonPath("$.currency").value("USD"))
+                .andExpect(jsonPath("$.nickname").doesNotExist());
+    }
+
+    @Test
+    void createWallet_withNickname_storesAndReturnsNickname() throws Exception {
+        var request = new CreateWalletRequest(new BigDecimal("100.00"), "Player1");
+
+        MvcResult result = mockMvc.perform(post("/api/wallets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.balance").value("100.00"))
+                .andExpect(jsonPath("$.nickname").value("Player1"))
+                .andReturn();
+
+        String id = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+
+        // Verify nickname persists on GET
+        mockMvc.perform(get("/api/wallets/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickname").value("Player1"));
+    }
+
+    @Test
+    void createWallet_withoutNickname_returnsNullNickname() throws Exception {
+        String json = "{\"initialBalance\": 50}";
+
+        MvcResult result = mockMvc.perform(post("/api/wallets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nickname").doesNotExist())
+                .andReturn();
+
+        String id = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(get("/api/wallets/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nickname").doesNotExist());
     }
 
     @Test
     void getWallet_returnsCorrectBalance() throws Exception {
         // Create wallet
-        var request = new CreateWalletRequest(new BigDecimal("250.50"));
+        var request = new CreateWalletRequest(new BigDecimal("250.50"), null);
         MvcResult result = mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -70,7 +110,7 @@ class WalletControllerTest {
     @Test
     void deposit_increasesBalance() throws Exception {
         // Create wallet with 100
-        var createReq = new CreateWalletRequest(new BigDecimal("100.00"));
+        var createReq = new CreateWalletRequest(new BigDecimal("100.00"), null);
         MvcResult result = mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createReq)))
@@ -90,7 +130,7 @@ class WalletControllerTest {
 
     @Test
     void deposit_withZeroAmount_returns400() throws Exception {
-        var createReq = new CreateWalletRequest(new BigDecimal("100.00"));
+        var createReq = new CreateWalletRequest(new BigDecimal("100.00"), null);
         MvcResult result = mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createReq)))
@@ -108,7 +148,7 @@ class WalletControllerTest {
 
     @Test
     void deposit_withNegativeAmount_returns400() throws Exception {
-        var createReq = new CreateWalletRequest(new BigDecimal("100.00"));
+        var createReq = new CreateWalletRequest(new BigDecimal("100.00"), null);
         MvcResult result = mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createReq)))
@@ -133,7 +173,7 @@ class WalletControllerTest {
     @Test
     void concurrentDeposits_doNotLoseMoney() throws Exception {
         // Create wallet with 0 balance
-        var createReq = new CreateWalletRequest(BigDecimal.ZERO);
+        var createReq = new CreateWalletRequest(BigDecimal.ZERO, null);
         MvcResult result = mockMvc.perform(post("/api/wallets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createReq)))

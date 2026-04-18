@@ -1,67 +1,82 @@
 {
-  "projectName": "Crypto Bet Engine",
-  "branchName": "ralph/crypto-bet-engine",
-  "description": "Real-time crypto betting engine with Java 21 / Spring Boot",
+  "projectName": "Crypto Bet Engine Frontend",
+  "branchName": "ralph/crypto-bet-frontend",
+  "description": "Browser-based frontend for the Crypto Bet Engine — vanilla HTML/CSS/JS, dark theme, real-time WebSocket",
   "stories": [
     {
-      "id": "US-001",
-      "title": "Spring Boot Project Scaffolding",
+      "id": "US-F01",
+      "title": "Add Nickname Field to Wallet Backend",
       "passes": true
     },
     {
-      "id": "US-002",
-      "title": "Wallet Entity and REST API",
-      "passes": true
+      "id": "US-F02",
+      "title": "Enable SockJS Fallback on WebSocket",
+      "passes": false
     },
     {
-      "id": "US-003",
-      "title": "Bet Entity and Placement API",
-      "passes": true
+      "id": "US-F03",
+      "title": "App Shell — HTML and Dark Theme CSS",
+      "passes": false
     },
     {
-      "id": "US-004",
-      "title": "Odds Calculation with Vigorish",
-      "passes": true
+      "id": "US-F04",
+      "title": "JavaScript Foundation — API Client and App Init",
+      "passes": false
     },
     {
-      "id": "US-005",
-      "title": "Exposure Tracking via Redis",
-      "passes": true
+      "id": "US-F05",
+      "title": "Wallet Creation Modal",
+      "passes": false
     },
     {
-      "id": "US-006",
-      "title": "Binance WebSocket Price Feed",
-      "passes": true
+      "id": "US-F06",
+      "title": "Wallet Dashboard — Balance and Deposit",
+      "passes": false
     },
     {
-      "id": "US-007",
-      "title": "Settlement Scheduler",
-      "passes": true
+      "id": "US-F07",
+      "title": "WebSocket Connection and Live Price Display",
+      "passes": false
     },
     {
-      "id": "US-008",
-      "title": "WebSocket Price Push to Clients",
-      "passes": true
+      "id": "US-F08",
+      "title": "Price Sparkline Charts",
+      "passes": false
     },
     {
-      "id": "US-009",
-      "title": "Bet Status and History API",
-      "passes": true
+      "id": "US-F09",
+      "title": "Bet Placement Form with Odds and Exposure",
+      "passes": false
     },
     {
-      "id": "US-010",
-      "title": "WebSocket Bet Updates",
-      "passes": true
+      "id": "US-F10",
+      "title": "Bet Placement Confirmation and Submission",
+      "passes": false
     },
     {
-      "id": "US-011",
-      "title": "Global Error Handling and Validation",
-      "passes": true
+      "id": "US-F11",
+      "title": "Active Bets Display on Dashboard",
+      "passes": false
     },
     {
-      "id": "US-012",
-      "title": "Production Configuration and CI",
-      "passes": true
+      "id": "US-F12",
+      "title": "Live Bet Settlement Notifications",
+      "passes": false
+    },
+    {
+      "id": "US-F13",
+      "title": "Bet History View with Filters and Pagination",
+      "passes": false
+    },
+    {
+      "id": "US-F14",
+      "title": "Wallet Switching",
+      "passes": false
+    },
+    {
+      "id": "US-F15",
+      "title": "Loading States and Error Handling Polish",
+      "passes": false
     }
   ]
 }

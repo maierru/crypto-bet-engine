@@ -1,0 +1,1 @@
+ALTER TABLE wallets ADD COLUMN nickname VARCHAR(50);

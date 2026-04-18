@@ -29,7 +29,7 @@ public class WalletController {
 
     @PostMapping
     public ResponseEntity<WalletResponse> createWallet(@Valid @RequestBody CreateWalletRequest request) {
-        var response = walletService.createWallet(request.initialBalance());
+        var response = walletService.createWallet(request.initialBalance(), request.nickname());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
