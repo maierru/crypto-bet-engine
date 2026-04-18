@@ -585,3 +585,17 @@
   - Deposit form is in static HTML (`#deposit-section`) but hidden by default — toggle via deposit button
   - Balance assertion uses exact string match `$1500.00` (1000 initial + 500 deposit)
 ---
+
+## 2026-04-18 - US-E08
+- Run script for local E2E testing
+- `test/e2e/run.sh`: starts docker-compose with e2e override, waits for health, runs all test_*.rb files, cleans up on exit
+- `docker-compose.e2e.yml`: override setting `SPRING_PROFILES_ACTIVE=prod,e2e`
+- Files changed:
+  - docker-compose.e2e.yml (new)
+  - test/e2e/run.sh (new)
+- **Learnings for future iterations:**
+  - Docker compose `-f base -f override` pattern cleanly layers environment changes
+  - `trap cleanup EXIT` ensures docker-compose down runs even on test failure or Ctrl+C
+  - Run each test file separately to get per-file output; track exit code with `|| test_exit=$?`
+  - Pre-existing WebSocket test failures (PriceWebSocketTest, BetWebSocketTest) are not related to E2E changes
+---

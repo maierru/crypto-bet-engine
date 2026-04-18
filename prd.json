@@ -41,7 +41,7 @@
     {
       "id": "US-E08",
       "title": "Run script for local testing",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-E09",
