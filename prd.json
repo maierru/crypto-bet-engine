@@ -71,7 +71,7 @@
     {
       "id": "US-F14",
       "title": "Wallet Switching",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F15",

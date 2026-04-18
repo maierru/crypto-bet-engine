@@ -23,6 +23,16 @@
         <span class="header__wallet-name" id="wallet-name">No Wallet</span>
         <span class="header__wallet-balance" id="wallet-balance"></span>
       </div>
+      <div class="wallet-dropdown" id="wallet-dropdown" style="display:none">
+        <div class="wallet-dropdown__current" id="wallet-dropdown-current"></div>
+        <hr style="border-color:var(--border-color);margin:8px 0">
+        <button class="wallet-dropdown__btn" id="wallet-new-btn">Create New Wallet</button>
+        <div class="wallet-dropdown__switch">
+          <input class="form__input form__input--mono" type="text" id="switch-wallet-id" placeholder="Enter Wallet ID">
+          <button class="btn btn--primary btn--sm" id="switch-wallet-btn">Switch</button>
+        </div>
+        <div class="form__error" id="switch-wallet-error" style="margin:0"></div>
+      </div>
     </div>
   </header>
 

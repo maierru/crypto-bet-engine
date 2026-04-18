@@ -839,6 +839,69 @@
     };
   });
 
+  // --- Wallet Switching ---
+
+  var walletDropdown = document.getElementById('wallet-dropdown');
+  var walletDropdownCurrent = document.getElementById('wallet-dropdown-current');
+  var walletIndicator = document.getElementById('wallet-indicator');
+  var walletNewBtn = document.getElementById('wallet-new-btn');
+  var switchWalletIdEl = document.getElementById('switch-wallet-id');
+  var switchWalletBtn = document.getElementById('switch-wallet-btn');
+  var switchWalletError = document.getElementById('switch-wallet-error');
+
+  walletIndicator.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var stored = getStoredWallet();
+    if (stored) {
+      walletDropdownCurrent.textContent = stored.nickname + ' (' + stored.id.substring(0, 8) + '...)';
+    } else {
+      walletDropdownCurrent.textContent = 'No wallet connected';
+    }
+    walletDropdown.style.display = walletDropdown.style.display === 'none' ? '' : 'none';
+    switchWalletError.textContent = '';
+  });
+
+  document.addEventListener('click', function () {
+    walletDropdown.style.display = 'none';
+  });
+
+  walletDropdown.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+
+  walletNewBtn.addEventListener('click', function () {
+    walletDropdown.style.display = 'none';
+    showWalletModal();
+  });
+
+  switchWalletBtn.addEventListener('click', function () {
+    var id = switchWalletIdEl.value.trim();
+    if (!id) {
+      switchWalletError.textContent = 'Enter a wallet ID.';
+      return;
+    }
+    switchWalletBtn.disabled = true;
+    switchWalletError.textContent = '';
+
+    api('GET', '/api/wallets/' + id)
+      .then(function (wallet) {
+        wsDisconnect();
+        storeWallet(wallet.id, wallet.nickname || 'Wallet');
+        updateWalletIndicator(wallet.nickname, wallet.balance);
+        walletDropdown.style.display = 'none';
+        switchWalletIdEl.value = '';
+        loadWalletDetails();
+        wsConnect();
+        showToast('Switched to ' + (wallet.nickname || 'Wallet'), 'success');
+      })
+      .catch(function (err) {
+        switchWalletError.textContent = err.message || 'Wallet not found.';
+      })
+      .finally(function () {
+        switchWalletBtn.disabled = false;
+      });
+  });
+
   // --- Utility ---
 
   function escapeHtml(str) {

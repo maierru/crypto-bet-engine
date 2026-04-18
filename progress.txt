@@ -534,3 +534,20 @@
   - Spring Data Page response has `number`, `totalPages`, `totalElements`, `content` fields
   - Status filter appended as query param only when non-empty (All = no filter)
 ---
+
+## 2026-04-18 - US-F14
+- Wallet switching: clickable wallet indicator in header opens dropdown
+- Dropdown shows current wallet info, "Create New Wallet" button, and switch-by-ID input
+- Switch validates wallet via GET /api/wallets/{id}, then stores and reloads everything
+- WebSocket disconnects and reconnects with new wallet context on switch
+- Click outside dropdown closes it
+- Files changed:
+  - src/main/resources/static/index.html (wallet dropdown HTML)
+  - src/main/resources/static/css/style.css (dropdown styles)
+  - src/main/resources/static/js/app.js (dropdown toggle, switch/create handlers)
+  - prd.json (US-F14 passes: true)
+- **Learnings for future iterations:**
+  - `wsDisconnect()` before `wsConnect()` on wallet switch to clean up old subscriptions
+  - `e.stopPropagation()` on dropdown click prevents document click handler from closing it
+  - Dropdown positioned absolute relative to header — uses fixed z-index above content
+---
