@@ -478,6 +478,123 @@
     wsSubscribe('/topic/prices', handlePriceUpdate);
   }
 
+  // --- Bet Placement Form ---
+
+  var betSymbolEl = document.getElementById('bet-symbol');
+  var betAmountEl = document.getElementById('bet-amount');
+  var betInfoEl = document.getElementById('bet-info');
+  var betOddsEl = document.getElementById('bet-odds');
+  var betExposureEl = document.getElementById('bet-exposure');
+  var betPayoutEl = document.getElementById('bet-payout');
+  var betSubmitBtn = document.getElementById('bet-submit-btn');
+  var betFormError = document.getElementById('bet-form-error');
+  var betDirBtns = document.querySelectorAll('.bet-dir-btn');
+  var selectedDirection = null;
+  var currentOdds = null;
+
+  betDirBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      selectedDirection = this.getAttribute('data-dir');
+      betDirBtns.forEach(function (b) { b.classList.remove('bet-dir-btn--active'); });
+      this.classList.add('bet-dir-btn--active');
+      fetchBetInfo();
+    });
+  });
+
+  betSymbolEl.addEventListener('change', function () {
+    fetchBetInfo();
+  });
+
+  betAmountEl.addEventListener('input', function () {
+    updateEstPayout();
+    validateBetForm();
+  });
+
+  function fetchBetInfo() {
+    var symbol = betSymbolEl.value;
+    var dir = selectedDirection;
+    if (!symbol || !dir) {
+      betInfoEl.style.display = 'none';
+      betSubmitBtn.disabled = true;
+      return;
+    }
+
+    betInfoEl.style.display = '';
+
+    // Fetch odds and exposure in parallel
+    api('GET', '/api/odds?symbol=' + symbol + '&direction=' + dir)
+      .then(function (data) {
+        currentOdds = parseFloat(data.odds);
+        betOddsEl.textContent = currentOdds.toFixed(4);
+        updateEstPayout();
+        validateBetForm();
+      })
+      .catch(function () {
+        betOddsEl.textContent = 'Error';
+        currentOdds = null;
+      });
+
+    api('GET', '/api/exposure/' + symbol)
+      .then(function (data) {
+        betExposureEl.textContent = '$' + Number(data.exposure).toFixed(2);
+      })
+      .catch(function () {
+        betExposureEl.textContent = '—';
+      });
+  }
+
+  function updateEstPayout() {
+    var amount = parseFloat(betAmountEl.value);
+    if (currentOdds && amount > 0) {
+      betPayoutEl.textContent = '$' + (amount * currentOdds).toFixed(2);
+    } else {
+      betPayoutEl.textContent = '—';
+    }
+  }
+
+  function validateBetForm() {
+    var symbol = betSymbolEl.value;
+    var amount = parseFloat(betAmountEl.value);
+    betSubmitBtn.disabled = !symbol || !selectedDirection || !currentOdds || !amount || amount < 1;
+  }
+
+  betSubmitBtn.addEventListener('click', function () {
+    var stored = getStoredWallet();
+    if (!stored) return;
+
+    var symbol = betSymbolEl.value;
+    var amount = parseFloat(betAmountEl.value);
+
+    if (!symbol || !selectedDirection || !amount || amount < 1) return;
+
+    betFormError.textContent = '';
+    betSubmitBtn.disabled = true;
+
+    api('POST', '/api/bets', {
+      walletId: stored.id,
+      symbol: symbol,
+      direction: selectedDirection,
+      amount: amount
+    })
+      .then(function () {
+        showToast('Bet placed! ' + selectedDirection + ' ' + symbol + ' for $' + amount.toFixed(2), 'success');
+        betAmountEl.value = '';
+        currentOdds = null;
+        betInfoEl.style.display = 'none';
+        betDirBtns.forEach(function (b) { b.classList.remove('bet-dir-btn--active'); });
+        selectedDirection = null;
+        betSubmitBtn.disabled = true;
+        loadWalletDetails();
+      })
+      .catch(function (err) {
+        betFormError.textContent = err.message;
+      })
+      .finally(function () {
+        betSubmitBtn.disabled = false;
+        validateBetForm();
+      });
+  });
+
   // --- Utility ---
 
   function escapeHtml(str) {

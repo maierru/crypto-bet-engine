@@ -79,7 +79,45 @@
         <div class="card" id="bet-card">
           <div class="card__header">Place Bet</div>
           <div class="card__body" id="bet-form-container">
-            <p class="text--muted">Select a symbol to place a bet.</p>
+            <div class="bet-form">
+              <div class="bet-form__row">
+                <div class="form__group" style="flex:1">
+                  <label class="form__label" for="bet-symbol">Symbol</label>
+                  <select class="form__input form__input--mono" id="bet-symbol">
+                    <option value="">Select symbol</option>
+                    <option value="BTCUSDT">BTCUSDT</option>
+                    <option value="ETHUSDT">ETHUSDT</option>
+                  </select>
+                </div>
+                <div class="form__group" style="flex:1">
+                  <label class="form__label">Direction</label>
+                  <div class="bet-form__direction">
+                    <button type="button" class="btn btn--up btn--sm bet-dir-btn" data-dir="UP">&#9650; UP</button>
+                    <button type="button" class="btn btn--down btn--sm bet-dir-btn" data-dir="DOWN">&#9660; DOWN</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form__group">
+                <label class="form__label" for="bet-amount">Amount (USD)</label>
+                <input class="form__input form__input--mono" type="number" id="bet-amount" placeholder="100" min="1" step="0.01">
+              </div>
+              <div class="bet-form__info" id="bet-info" style="display:none">
+                <div class="bet-info__row">
+                  <span class="text--muted">Odds:</span>
+                  <span class="text--mono" id="bet-odds">—</span>
+                </div>
+                <div class="bet-info__row">
+                  <span class="text--muted">Exposure:</span>
+                  <span class="text--mono" id="bet-exposure">—</span>
+                </div>
+                <div class="bet-info__row">
+                  <span class="text--muted">Est. Payout:</span>
+                  <span class="text--mono text--up" id="bet-payout">—</span>
+                </div>
+              </div>
+              <div class="form__error" id="bet-form-error"></div>
+              <button class="btn btn--primary btn--full" id="bet-submit-btn" disabled>Place Bet</button>
+            </div>
           </div>
         </div>
 

@@ -46,7 +46,7 @@
     {
       "id": "US-F09",
       "title": "Bet Placement Form with Odds and Exposure",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F10",
