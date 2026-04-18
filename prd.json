@@ -31,7 +31,7 @@
     {
       "id": "US-006",
       "title": "Binance WebSocket Price Feed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-007",

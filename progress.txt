@@ -15,6 +15,9 @@
 - OddsService is injectable — use it wherever odds/payout calculation is needed
 - Redis exposure keys: `exposure:{symbol}` — use ExposureService for all exposure mutations
 - ExposureService uses `StringRedisTemplate` with get/set (not INCRBYFLOAT) for BigDecimal precision
+- PriceService stores latest prices in ConcurrentHashMap — use `getPrice(symbol)` for current price
+- BinancePriceFeed connects to Binance via Java HttpClient WebSocket — disable in tests with `binance.symbols: ""`
+- Binance config: `binance.ws-url` and `binance.symbols` (CSV) in application.yml
 
 ---
 
@@ -121,4 +124,29 @@
   - StringRedisTemplate + get/set is better than INCRBYFLOAT for BigDecimal precision
   - ExposureService.removeExposure() clamps to zero to prevent negative exposure
   - Exposure is tracked per symbol (not per direction) — represents total platform liability
+---
+
+## 2026-04-18 - US-006
+- Binance WebSocket price feed with auto-reconnect
+- PriceService: in-memory ConcurrentHashMap for latest prices per symbol
+- BinancePriceFeed: Java HttpClient WebSocket connecting to Binance mini-ticker stream
+- PriceController: GET /api/prices/{symbol} and GET /api/prices
+- Handles both single-stream and combined-stream JSON formats
+- TDD: 6 unit tests (PriceServiceTest) + 5 unit tests (BinancePriceFeedTest) + 3 integration tests (PriceControllerTest)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/price/PriceService.java (new)
+  - src/main/java/com/cryptobet/engine/price/BinancePriceFeed.java (new)
+  - src/main/java/com/cryptobet/engine/price/PriceController.java (new)
+  - src/main/java/com/cryptobet/engine/price/dto/PriceResponse.java (new)
+  - src/main/resources/application.yml (added binance config)
+  - src/test/resources/application-test.yml (added binance config, symbols empty)
+  - src/test/java/com/cryptobet/engine/price/PriceServiceTest.java (new)
+  - src/test/java/com/cryptobet/engine/price/BinancePriceFeedTest.java (new)
+  - src/test/java/com/cryptobet/engine/price/PriceControllerTest.java (new)
+- **Learnings for future iterations:**
+  - Java HttpClient WebSocket (java.net.http) works well for external WS connections on Java 21
+  - Binance combined stream wraps data in {"stream":"...","data":{...}} — must handle both formats
+  - Disable Binance feed in tests by setting `binance.symbols: ""` — empty string means no connection
+  - BinancePriceFeed.handleMessage() is package-private for direct unit testing without actual WS connection
+  - Auto-reconnect with 5s delay via ScheduledExecutorService handles connection drops gracefully
 ---

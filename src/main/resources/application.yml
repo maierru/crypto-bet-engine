@@ -34,5 +34,9 @@ management:
 betting:
   vig-rate: 0.05
 
+binance:
+  ws-url: wss://stream.binance.com:9443/ws
+  symbols: BTCUSDT,ETHUSDT
+
 server:
   port: 8080
