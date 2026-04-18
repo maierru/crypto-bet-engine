@@ -11,3 +11,5 @@ build/
 *.iws
 out/
 .DS_Store
+prd.json
+progress.txt
