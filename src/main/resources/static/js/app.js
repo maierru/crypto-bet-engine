@@ -396,7 +396,7 @@
       var grid = container.querySelector('.price-grid');
       if (grid) {
         // Clear skeleton placeholders on first real price
-        grid.innerHTML = '';
+        grid.querySelectorAll('.skeleton').forEach(function(el) { el.remove(); });
       } else {
         grid = document.createElement('div');
         grid.className = 'price-grid';
