@@ -44,6 +44,10 @@
 - Docker: multi-stage Dockerfile (temurin:21-jdk-alpine build → temurin:21-jre-alpine runtime), non-root user
 - CI: GitHub Actions `.github/workflows/ci.yml` — build+test with Redis service, then Docker image build
 - EmbeddedRedisConfig `isPortAvailable()` check allows tests to use CI-provided Redis without conflict
+- Frontend: static files in `src/main/resources/static/` — index.html, css/style.css, js/app.js
+- Frontend: `window.CryptoBet` exposes shared functions (api, showToast, getStoredWallet, etc.) for cross-module use
+- Frontend: CSS custom properties in `:root` for theme colors — use `var(--color-up)`, `var(--color-down)`, etc.
+- Frontend: wallet state in localStorage (`walletId`, `walletNickname`) — check on init, show modal if absent
 
 ---
 
@@ -344,4 +348,27 @@
   - SockJsClient wraps WebSocketTransport(StandardWebSocketClient()) — import from `org.springframework.web.socket.sockjs.client`
   - With SockJS enabled, raw WebSocket still works under `/ws/{server}/{session}/websocket` but SockJsClient handles this transparently
   - Frontend should use SockJS client library (CDN) connecting to `/ws` endpoint for cross-browser compatibility
+---
+
+## 2026-04-18 - US-F03
+- App shell with dark trading-style theme: index.html, css/style.css, js/app.js
+- Responsive layout: fixed sidebar on desktop, bottom nav on mobile (<768px)
+- Header with app name and wallet indicator (nickname + balance)
+- Navigation between Dashboard and Bet History views via client-side view switching
+- Wallet creation modal with nickname + initial balance form
+- Toast notification system with auto-dismiss and animations
+- API client (fetch wrapper), localStorage wallet persistence
+- Dashboard cards: Wallet, Live Prices, Place Bet, Active Bets placeholders
+- Files changed:
+  - src/main/resources/static/index.html (new)
+  - src/main/resources/static/css/style.css (new)
+  - src/main/resources/static/js/app.js (new)
+  - prd.json (US-F03 passes: true)
+- **Learnings for future iterations:**
+  - Static files in `src/main/resources/static/` are auto-served by Spring Boot at root path
+  - CSS custom properties (--var) make dark theme easy to maintain and extend
+  - IIFE pattern in app.js avoids global scope pollution; expose only `window.CryptoBet` for cross-module access
+  - Modal uses `style="display:none"` + JS toggle rather than CSS class to prevent flash on load
+  - JetBrains Mono from Google Fonts for monospace prices — preconnect hints in HTML head
+  - Mobile layout uses bottom fixed nav bar (common mobile UX pattern for trading apps)
 ---

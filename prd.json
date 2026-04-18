@@ -16,7 +16,7 @@
     {
       "id": "US-F03",
       "title": "App Shell — HTML and Dark Theme CSS",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F04",
