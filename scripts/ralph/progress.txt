@@ -85,3 +85,15 @@ Started: Sat Apr 18 10:21:10 WEST 2026
   - Recording initial_balance before vs after bet placement matters: pre-bet can equal final on PUSH (stake returned exactly); post-bet stays same on LOSS
   - The e2e Spring profile must be active for 10s bet duration; verify via docker logs (actuator/env may not show profiles)
 ---
+
+## 2026-04-18 - US-E06
+- Implemented bet history E2E test
+- Files created: test/e2e/test_bet_history.rb
+- Test verifies: wallet creation → bet placement → settlement → navigate to history → table with row containing symbol/direction → badge with WON/LOST/PUSH → filter tab click
+- **Learnings for future iterations:**
+  - History view loads via switchView('history') which triggers loadBetHistory() API call
+  - Use JS click for sidebar links: `@browser.evaluate("document.querySelector('.sidebar__link[data-view=\"history\"]').click()")`
+  - History table renders as `.history-table` with `<tbody><tr>` rows — each row has `.badge` span for status
+  - Filter tabs use `.history-tab[data-filter='WON']` etc — clicking triggers API reload with `&status=` param
+  - Bet outcome is non-deterministic — after clicking WON filter, table may be empty (valid if bet was lost)
+---
