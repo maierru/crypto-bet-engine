@@ -38,6 +38,11 @@
 - Bean Validation on all request DTOs: `@NotNull`, `@Positive`, `@NotBlank` etc. with `@Valid` on controller `@RequestBody`
 - Insufficient balance throws `InsufficientBalanceException` (409 Conflict), not `IllegalArgumentException`
 - Validation errors return 400 with `VALIDATION_ERROR` code and field-level details map
+- Production profile: `application-prod.yml` with env var placeholders, HikariCP pool config, graceful shutdown
+- Structured JSON logging: `logback-prod.xml` with `JsonEncoder` (built into logback 1.5.x, no extra deps)
+- Docker: multi-stage Dockerfile (temurin:21-jdk-alpine build → temurin:21-jre-alpine runtime), non-root user
+- CI: GitHub Actions `.github/workflows/ci.yml` — build+test with Redis service, then Docker image build
+- EmbeddedRedisConfig `isPortAvailable()` check allows tests to use CI-provided Redis without conflict
 
 ---
 
@@ -302,4 +307,26 @@
   - InsufficientBalanceException is a domain exception in `error` package, thrown from Wallet entity
   - `MethodArgumentNotValidException` provides field-level errors via `getBindingResult().getFieldErrors()`
   - Existing tests may need updating when error codes change (e.g., insufficient balance 400→409)
+---
+
+## 2026-04-18 - US-012
+- Production configuration and CI pipeline
+- Enhanced `application-prod.yml`: HikariCP pool (20 max, 5 min idle), graceful shutdown, health probes
+- Structured JSON logging via `logback-prod.xml` using built-in `JsonEncoder`
+- Multi-stage Dockerfile: temurin:21-jdk-alpine → temurin:21-jre-alpine, non-root user, healthcheck
+- docker-compose.yml: app + postgres:16-alpine + redis:7-alpine with health checks
+- GitHub Actions CI: build+test with Redis service container, Docker image build
+- Files changed:
+  - src/main/resources/application-prod.yml (enhanced with HikariCP, logging, actuator, graceful shutdown)
+  - src/main/resources/logback-prod.xml (new — JSON structured logging)
+  - Dockerfile (new — multi-stage build)
+  - docker-compose.yml (new — full stack orchestration)
+  - .github/workflows/ci.yml (new — CI pipeline)
+  - prd.json (US-012 passes: true)
+- **Learnings for future iterations:**
+  - Logback 1.5.x includes `JsonEncoder` natively — no extra dependency needed for structured JSON logging
+  - `isPortAvailable()` in EmbeddedRedisConfig prevents conflicts when CI provides its own Redis
+  - Multi-stage Docker builds with Alpine JRE images keep production images small
+  - Docker Compose `depends_on` with `condition: service_healthy` ensures proper startup order
+  - GitHub Actions Redis service maps to 16379 to match test profile port
 ---

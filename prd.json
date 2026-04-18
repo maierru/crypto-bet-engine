@@ -61,7 +61,7 @@
     {
       "id": "US-012",
       "title": "Production Configuration and CI",
-      "passes": false
+      "passes": true
     }
   ]
 }
