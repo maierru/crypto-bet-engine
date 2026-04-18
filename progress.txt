@@ -517,3 +517,20 @@
   - OPEN status events from bet placement are ignored (only settlement matters for notifications)
   - `loadWalletDetails()` already calls `loadActiveBets()` — single call refreshes everything
 ---
+
+## 2026-04-18 - US-F13
+- Bet history view: table with filter tabs (All/Won/Lost/Push/Cancelled) and pagination
+- Table columns: symbol, direction, amount, odds, payout, status badge, placed time, settled time
+- Status badges color-coded: green WON, red LOST, yellow PUSH, blue OPEN, gray CANCELLED
+- Pagination: Previous/Next buttons with page X of Y indicator
+- History loads on view switch to "history" tab
+- Files changed:
+  - src/main/resources/static/index.html (history tabs, pagination controls)
+  - src/main/resources/static/css/style.css (tabs, table, badges, pagination styles)
+  - src/main/resources/static/js/app.js (loadBetHistory, renderBetHistory, tab/pagination handlers)
+  - prd.json (US-F13 passes: true)
+- **Learnings for future iterations:**
+  - Overrode `switchView` to trigger `loadBetHistory()` on history view — rebound nav link handlers
+  - Spring Data Page response has `number`, `totalPages`, `totalElements`, `content` fields
+  - Status filter appended as query param only when non-empty (All = no filter)
+---

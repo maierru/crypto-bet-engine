@@ -66,7 +66,7 @@
     {
       "id": "US-F13",
       "title": "Bet History View with Filters and Pagination",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F14",

@@ -134,9 +134,22 @@
       <section class="view" id="view-history">
         <h2 class="view__title">Bet History</h2>
         <div class="card">
-          <div class="card__header">History</div>
+          <div class="card__header">
+            <div class="history-tabs">
+              <button class="history-tab history-tab--active" data-filter="">All</button>
+              <button class="history-tab" data-filter="WON">Won</button>
+              <button class="history-tab" data-filter="LOST">Lost</button>
+              <button class="history-tab" data-filter="PUSH">Push</button>
+              <button class="history-tab" data-filter="CANCELLED">Cancelled</button>
+            </div>
+          </div>
           <div class="card__body" id="bet-history">
             <p class="text--muted">No bet history yet.</p>
+          </div>
+          <div class="card__body history-pagination" id="history-pagination" style="display:none;border-top:1px solid var(--border-color)">
+            <button class="btn btn--ghost btn--sm" id="history-prev" disabled>Previous</button>
+            <span class="text--muted text--mono" id="history-page-info">Page 1</span>
+            <button class="btn btn--ghost btn--sm" id="history-next" disabled>Next</button>
           </div>
         </div>
       </section>

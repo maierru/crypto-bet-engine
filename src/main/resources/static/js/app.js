@@ -729,6 +729,116 @@
     });
   }
 
+  // --- Bet History ---
+
+  var betHistoryContainer = document.getElementById('bet-history');
+  var historyPagination = document.getElementById('history-pagination');
+  var historyPrevBtn = document.getElementById('history-prev');
+  var historyNextBtn = document.getElementById('history-next');
+  var historyPageInfo = document.getElementById('history-page-info');
+  var historyTabs = document.querySelectorAll('.history-tab');
+  var historyFilter = '';
+  var historyPage = 0;
+  var historyPageSize = 20;
+
+  historyTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      historyTabs.forEach(function (t) { t.classList.remove('history-tab--active'); });
+      this.classList.add('history-tab--active');
+      historyFilter = this.getAttribute('data-filter');
+      historyPage = 0;
+      loadBetHistory();
+    });
+  });
+
+  historyPrevBtn.addEventListener('click', function () {
+    if (historyPage > 0) {
+      historyPage--;
+      loadBetHistory();
+    }
+  });
+
+  historyNextBtn.addEventListener('click', function () {
+    historyPage++;
+    loadBetHistory();
+  });
+
+  function loadBetHistory() {
+    var stored = getStoredWallet();
+    if (!stored) return;
+
+    var url = '/api/wallets/' + stored.id + '/bets?page=' + historyPage + '&size=' + historyPageSize;
+    if (historyFilter) url += '&status=' + historyFilter;
+
+    api('GET', url)
+      .then(function (page) {
+        renderBetHistory(page.content || [], page);
+      })
+      .catch(function () {
+        betHistoryContainer.innerHTML = '<p class="text--muted">Failed to load bet history.</p>';
+      });
+  }
+
+  function renderBetHistory(bets, pageData) {
+    if (!bets || bets.length === 0) {
+      betHistoryContainer.innerHTML = '<p class="text--muted">No bets found.</p>';
+      historyPagination.style.display = 'none';
+      return;
+    }
+
+    var html = '<table class="history-table"><thead><tr>' +
+      '<th>Symbol</th><th>Dir</th><th>Amount</th><th>Odds</th><th>Payout</th><th>Status</th><th>Placed</th><th>Settled</th>' +
+      '</tr></thead><tbody>';
+
+    bets.forEach(function (bet) {
+      var dirClass = bet.direction === 'UP' ? 'text--up' : 'text--down';
+      var statusClass = 'badge--' + (bet.status || 'open').toLowerCase();
+      var placed = bet.createdAt ? new Date(bet.createdAt).toLocaleString() : '—';
+      var settled = bet.resolvedAt ? new Date(bet.resolvedAt).toLocaleString() : '—';
+      var payout = bet.potentialPayout ? '$' + Number(bet.potentialPayout).toFixed(2) : '—';
+      var odds = bet.odds ? Number(bet.odds).toFixed(4) : '—';
+
+      html += '<tr>' +
+        '<td class="text--mono">' + escapeHtml(bet.symbol) + '</td>' +
+        '<td class="' + dirClass + '">' + bet.direction + '</td>' +
+        '<td class="text--mono">$' + Number(bet.amount).toFixed(2) + '</td>' +
+        '<td class="text--mono">' + odds + '</td>' +
+        '<td class="text--mono">' + payout + '</td>' +
+        '<td><span class="badge ' + statusClass + '">' + bet.status + '</span></td>' +
+        '<td style="font-size:0.8rem">' + placed + '</td>' +
+        '<td style="font-size:0.8rem">' + settled + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    betHistoryContainer.innerHTML = html;
+
+    // Pagination
+    if (pageData.totalPages > 1) {
+      historyPagination.style.display = '';
+      historyPrevBtn.disabled = pageData.number === 0;
+      historyNextBtn.disabled = pageData.number >= pageData.totalPages - 1;
+      historyPageInfo.textContent = 'Page ' + (pageData.number + 1) + ' of ' + pageData.totalPages;
+    } else {
+      historyPagination.style.display = 'none';
+    }
+  }
+
+  // Load history when switching to history view
+  var origSwitchView = switchView;
+  switchView = function (viewName) {
+    origSwitchView(viewName);
+    if (viewName === 'history') {
+      loadBetHistory();
+    }
+  };
+  // Re-bind nav links with updated switchView
+  navLinks.forEach(function (link) {
+    link.onclick = function (e) {
+      e.preventDefault();
+      switchView(this.getAttribute('data-view'));
+    };
+  });
+
   // --- Utility ---
 
   function escapeHtml(str) {

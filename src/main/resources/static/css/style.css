@@ -611,6 +611,87 @@ body {
   color: var(--color-push);
 }
 
+/* History tabs */
+.history-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.history-tab {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.2s, color 0.2s;
+}
+
+.history-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.history-tab--active {
+  background: var(--bg-accent);
+  color: var(--color-accent);
+}
+
+/* History table */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 8px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge--won { background: rgba(0, 230, 118, 0.15); color: var(--color-up); }
+.badge--lost { background: rgba(255, 23, 68, 0.15); color: var(--color-down); }
+.badge--push { background: rgba(255, 214, 0, 0.15); color: var(--color-push); }
+.badge--open { background: rgba(79, 195, 247, 0.15); color: var(--color-accent); }
+.badge--cancelled { background: rgba(136, 136, 160, 0.15); color: var(--text-secondary); }
+
+/* History pagination */
+.history-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+}
+
 /* Responsive: mobile (<768px) */
 @media (max-width: 767px) {
   .sidebar {
