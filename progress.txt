@@ -422,3 +422,22 @@
   - Use `page=0&size=1` with `totalElements` from Spring Data Page to get count without loading all records
   - `loadActiveBetCount` exposed on `window.CryptoBet` for refresh after bet placement/settlement
 ---
+
+## 2026-04-18 - US-F07
+- Live price ticker: price cards with real-time updates, flash animations, sparkline charts
+- Subscribe to `/topic/prices` on WebSocket connect, auto-resubscribe on reconnect
+- Price cards show: symbol name, current price (formatted), direction arrow (up/down/neutral)
+- Price flash: CSS animation (green for up, red for down) on price change
+- Sparkline: HTML5 canvas, last 50 price points, HiDPI-aware (2x scale), green/red line based on trend
+- Price formatting: 2 decimals for >= $1, 8 decimals for < $1 (crypto precision)
+- Grid layout for price cards, responsive via CSS grid auto-fill
+- Files changed:
+  - src/main/resources/static/js/app.js (price ticker logic, sparkline drawing, price subscription)
+  - src/main/resources/static/css/style.css (price card, sparkline styles)
+  - prd.json (US-F07 passes: true)
+- **Learnings for future iterations:**
+  - Canvas doesn't support CSS variables — use `getComputedStyle` to read `--color-up`/`--color-down`
+  - HiDPI sparkline: set canvas.width = offsetWidth * 2 and ctx.scale(2,2) for crisp lines
+  - `subscribeToPrices()` called inside `onConnect` to auto-resubscribe on reconnect
+  - Price history stored per-symbol in `priceHistory` object, capped at 50 entries
+---

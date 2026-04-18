@@ -36,7 +36,7 @@
     {
       "id": "US-F07",
       "title": "WebSocket Connection and Live Price Display",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F08",

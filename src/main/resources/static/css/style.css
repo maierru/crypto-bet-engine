@@ -475,6 +475,50 @@ body {
   animation: flash-down 1s ease-out;
 }
 
+/* Price cards */
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.price-card {
+  background: var(--bg-accent);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+}
+
+.price-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.price-card__symbol {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.price-card__arrow {
+  font-size: 1rem;
+}
+
+.price-card__price {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.price-card__sparkline {
+  width: 100%;
+  height: 40px;
+  display: block;
+}
+
 /* Responsive: mobile (<768px) */
 @media (max-width: 767px) {
   .sidebar {

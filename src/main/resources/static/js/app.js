@@ -309,6 +309,8 @@
             cb(JSON.parse(msg.body));
           });
         });
+        // Subscribe to price feed
+        subscribeToPrices();
       },
       onStompError: function () {
         setConnStatus('disconnected');
@@ -346,6 +348,136 @@
     delete wsSubscriptions[topic];
   }
 
+  // --- Live Price Ticker ---
+
+  var priceHistory = {}; // { symbol: [price1, price2, ...] }
+  var lastPrices = {};   // { symbol: lastPrice }
+  var MAX_HISTORY = 50;
+
+  function handlePriceUpdate(data) {
+    var symbol = data.symbol;
+    var price = parseFloat(data.price);
+    if (!symbol || isNaN(price)) return;
+
+    var prev = lastPrices[symbol];
+    lastPrices[symbol] = price;
+
+    if (!priceHistory[symbol]) priceHistory[symbol] = [];
+    priceHistory[symbol].push(price);
+    if (priceHistory[symbol].length > MAX_HISTORY) {
+      priceHistory[symbol].shift();
+    }
+
+    renderPriceCard(symbol, price, prev);
+  }
+
+  function renderPriceCard(symbol, price, prevPrice) {
+    var container = document.getElementById('price-ticker');
+    var cardId = 'price-card-' + symbol;
+    var card = document.getElementById(cardId);
+
+    if (!card) {
+      // Clear placeholder text on first card
+      if (!container.querySelector('.price-grid')) {
+        container.innerHTML = '<div class="price-grid" id="price-grid"></div>';
+      }
+      var grid = document.getElementById('price-grid');
+      card = document.createElement('div');
+      card.className = 'price-card';
+      card.id = cardId;
+      card.innerHTML =
+        '<div class="price-card__header">' +
+          '<span class="price-card__symbol">' + escapeHtml(symbol) + '</span>' +
+          '<span class="price-card__arrow" id="arrow-' + symbol + '"></span>' +
+        '</div>' +
+        '<div class="price-card__price" id="price-' + symbol + '"></div>' +
+        '<canvas class="price-card__sparkline" id="spark-' + symbol + '"></canvas>';
+      grid.appendChild(card);
+    }
+
+    // Update price with flash
+    var priceEl = document.getElementById('price-' + symbol);
+    var formatted = formatCryptoPrice(price);
+    priceEl.textContent = '$' + formatted;
+
+    // Flash animation
+    priceEl.classList.remove('price-flash-up', 'price-flash-down');
+    if (prevPrice !== undefined) {
+      if (price > prevPrice) {
+        priceEl.classList.add('price-flash-up');
+      } else if (price < prevPrice) {
+        priceEl.classList.add('price-flash-down');
+      }
+    }
+
+    // Arrow
+    var arrowEl = document.getElementById('arrow-' + symbol);
+    if (prevPrice !== undefined) {
+      if (price > prevPrice) {
+        arrowEl.textContent = '\u25B2';
+        arrowEl.style.color = 'var(--color-up)';
+      } else if (price < prevPrice) {
+        arrowEl.textContent = '\u25BC';
+        arrowEl.style.color = 'var(--color-down)';
+      } else {
+        arrowEl.textContent = '\u25C6';
+        arrowEl.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // Sparkline
+    drawSparkline(symbol);
+  }
+
+  function formatCryptoPrice(price) {
+    if (price >= 1) {
+      return price.toFixed(2);
+    }
+    return price.toFixed(8);
+  }
+
+  function drawSparkline(symbol) {
+    var canvas = document.getElementById('spark-' + symbol);
+    if (!canvas) return;
+    var history = priceHistory[symbol] || [];
+    if (history.length < 2) return;
+
+    var ctx = canvas.getContext('2d');
+    var w = canvas.offsetWidth;
+    var h = canvas.offsetHeight;
+    canvas.width = w * 2;
+    canvas.height = h * 2;
+    ctx.scale(2, 2);
+
+    var min = Math.min.apply(null, history);
+    var max = Math.max.apply(null, history);
+    var range = max - min || 1;
+    var pad = 2;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.beginPath();
+    ctx.strokeStyle = history[history.length - 1] >= history[0] ? 'var(--color-up)' : 'var(--color-down)';
+    // Canvas doesn't support CSS vars, use computed style
+    var styles = getComputedStyle(document.documentElement);
+    ctx.strokeStyle = history[history.length - 1] >= history[0]
+      ? styles.getPropertyValue('--color-up').trim()
+      : styles.getPropertyValue('--color-down').trim();
+    ctx.lineWidth = 1.5;
+    ctx.lineJoin = 'round';
+
+    for (var i = 0; i < history.length; i++) {
+      var x = (i / (history.length - 1)) * (w - pad * 2) + pad;
+      var y = h - pad - ((history[i] - min) / range) * (h - pad * 2);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  function subscribeToPrices() {
+    wsSubscribe('/topic/prices', handlePriceUpdate);
+  }
+
   // --- Utility ---
 
   function escapeHtml(str) {
@@ -368,6 +500,9 @@
     loadActiveBetCount: loadActiveBetCount,
     showWalletModal: showWalletModal,
     escapeHtml: escapeHtml,
+    handlePriceUpdate: handlePriceUpdate,
+    lastPrices: lastPrices,
+    priceHistory: priceHistory,
     wsConnect: wsConnect,
     wsDisconnect: wsDisconnect,
     wsSubscribe: wsSubscribe,
