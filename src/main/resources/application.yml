@@ -25,6 +25,12 @@ spring:
     virtual:
       enabled: true
 
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+
 management:
   endpoints:
     web:

@@ -27,6 +27,7 @@ public record BetResponse(
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         BigDecimal priceAtResolution,
         Instant resolvedAt,
+        Instant createdAt,
         String status
 ) {
 
@@ -43,6 +44,7 @@ public record BetResponse(
                 bet.getResolveAt(),
                 bet.getPriceAtResolution() != null ? bet.getPriceAtResolution().setScale(2, RoundingMode.HALF_UP) : null,
                 bet.getResolvedAt(),
+                bet.getCreatedAt(),
                 bet.getStatus().name()
         );
     }

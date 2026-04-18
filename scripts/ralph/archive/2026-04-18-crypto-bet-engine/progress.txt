@@ -1,0 +1,13 @@
+# Ralph Progress Log
+Started: Fri Apr 18 2026
+
+## Codebase Patterns
+- Gradle Kotlin DSL with foojay toolchain resolver for Java 21 auto-provisioning
+- Test profile: H2 in-memory DB (PostgreSQL mode), embedded Redis on port 16379
+- EmbeddedRedisConfig in test sources auto-starts Redis for @SpringBootTest with @ActiveProfiles("test")
+- Flyway disabled in test profile, ddl-auto=create-drop used instead
+- Static files served from src/main/resources/static/
+- WebSocket: STOMP over /ws with simple message broker, topics: /topic/prices, /topic/bets/{walletId}
+- Backend API base: /api (wallets, bets, prices, odds, exposure)
+
+---

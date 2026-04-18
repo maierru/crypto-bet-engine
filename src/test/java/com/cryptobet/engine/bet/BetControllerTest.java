@@ -1,6 +1,8 @@
 package com.cryptobet.engine.bet;
 
+import com.cryptobet.engine.price.PriceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +29,15 @@ class BetControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private PriceService priceService;
+
+    @BeforeEach
+    void seedPrices() {
+        priceService.updatePrice("BTCUSDT", new BigDecimal("65000.00"));
+        priceService.updatePrice("ETHUSDT", new BigDecimal("3500.00"));
+    }
+
     private String createWalletAndGetId(BigDecimal balance) throws Exception {
         var body = """
                 {"initialBalance": "%s"}
@@ -50,8 +61,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "50.00",
-                    "entryPrice": "65000.00"
+                    "stake": "50.00"
                 }
                 """.formatted(walletId);
 
@@ -77,8 +87,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "ETHUSDT",
                     "direction": "DOWN",
-                    "stake": "75.00",
-                    "entryPrice": "3500.00"
+                    "stake": "75.00"
                 }
                 """.formatted(walletId);
 
@@ -102,8 +111,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "100.00",
-                    "entryPrice": "65000.00"
+                    "stake": "100.00"
                 }
                 """.formatted(walletId);
 
@@ -121,8 +129,7 @@ class BetControllerTest {
                     "walletId": "00000000-0000-0000-0000-000000000000",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "50.00",
-                    "entryPrice": "65000.00"
+                    "stake": "50.00"
                 }
                 """;
 
@@ -141,8 +148,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "0.00",
-                    "entryPrice": "65000.00"
+                    "stake": "0.00"
                 }
                 """.formatted(walletId);
 
@@ -161,8 +167,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "-10.00",
-                    "entryPrice": "65000.00"
+                    "stake": "-10.00"
                 }
                 """.formatted(walletId);
 
@@ -181,8 +186,7 @@ class BetControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "50.00",
-                    "entryPrice": "65000.00"
+                    "stake": "50.00"
                 }
                 """.formatted(walletId);
 

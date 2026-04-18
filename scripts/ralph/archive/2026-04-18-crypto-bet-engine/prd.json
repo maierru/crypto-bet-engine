@@ -1,0 +1,276 @@
+{
+  "project": "crypto-bet-engine-frontend",
+  "branchName": "ralph/crypto-bet-frontend",
+  "description": "Browser-based frontend for the Crypto Bet Engine. Vanilla HTML/CSS/JS, dark trading theme, real-time WebSocket prices, bet placement with odds/exposure info, bet history. Served as static files from Spring Boot.",
+  "userStories": [
+    {
+      "id": "US-F01",
+      "title": "Add nickname field to wallet backend",
+      "description": "As a frontend developer, I need the wallet API to accept and return a nickname so users can identify their wallets.",
+      "acceptanceCriteria": [
+        "Add Flyway migration V5: ALTER TABLE wallets ADD COLUMN nickname VARCHAR(50)",
+        "Add nickname field to Wallet entity (nullable String)",
+        "Update CreateWalletRequest to accept optional nickname field",
+        "Update WalletResponse to include nickname",
+        "POST /api/wallets with {\"initialBalance\": 100, \"nickname\": \"Player1\"} stores and returns nickname",
+        "Existing wallets without nickname return null for nickname field",
+        "Existing tests still pass",
+        "./gradlew test passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Backend change needed before frontend can use nicknames. Keep nickname optional for backwards compat."
+    },
+    {
+      "id": "US-F02",
+      "title": "Enable SockJS fallback on WebSocket endpoint",
+      "description": "As a frontend developer, I need SockJS support so the browser can connect reliably to STOMP.",
+      "acceptanceCriteria": [
+        "Update WebSocketConfig: add .withSockJS() to the /ws endpoint registration",
+        "Add sockjs dependency if needed (spring-boot-starter-websocket should include it)",
+        "Existing WebSocket tests still pass",
+        "./gradlew test passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Browsers need SockJS fallback for reliable STOMP. Quick config change."
+    },
+    {
+      "id": "US-F03",
+      "title": "App shell — HTML structure and dark theme CSS",
+      "description": "As a user, I want a polished dark-themed layout so the app feels like a real trading platform.",
+      "acceptanceCriteria": [
+        "Create src/main/resources/static/index.html with semantic HTML structure",
+        "Create src/main/resources/static/css/style.css with dark theme",
+        "Dark palette: #0f0f1a (body bg), #1a1a2e (cards), #16213e (accents), #e0e0e0 (text)",
+        "Green #00e676 for UP/WON, Red #ff1744 for DOWN/LOST, Yellow #ffd600 for PUSH",
+        "CSS custom properties for all theme colors",
+        "Header bar with app name 'CryptoBet' and wallet indicator placeholder",
+        "Navigation: Dashboard and Bet History tabs/links",
+        "Main content area with placeholder sections: price ticker, bet panel, active bets",
+        "Responsive: sidebar + main on desktop (>768px), stacked on mobile",
+        "Google Fonts: JetBrains Mono for numbers, system font stack for UI text",
+        "Loading index.html in browser shows styled dark layout",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Static files only. No JS yet. Create the visual foundation."
+    },
+    {
+      "id": "US-F04",
+      "title": "JavaScript foundation — API client and app initialization",
+      "description": "As a developer, I need the JS structure with fetch wrapper and app state management.",
+      "acceptanceCriteria": [
+        "Create src/main/resources/static/js/app.js",
+        "App state object: { walletId, nickname, balance, prices: {}, bets: [] }",
+        "API helper: api.get(path), api.post(path, body) wrapping fetch() with error handling",
+        "API helper returns parsed JSON on success, throws with error message on failure",
+        "Toast notification system: showToast(message, type) where type is success/error/warning",
+        "Toast appears top-right, auto-dismisses after 5 seconds, stackable",
+        "CSS for toast notifications in style.css",
+        "View router: showView(name) toggles visibility of dashboard vs history sections",
+        "Navigation links switch views without page reload",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Foundation JS — no API calls yet, just structure."
+    },
+    {
+      "id": "US-F05",
+      "title": "Wallet creation modal",
+      "description": "As a new user, I want to create a wallet with a nickname so I can start using the platform.",
+      "acceptanceCriteria": [
+        "On page load, check localStorage for walletId",
+        "If no walletId, show modal overlay with create-wallet form",
+        "Form fields: nickname (text, required, min 2 chars), initial balance (number, required, > 0)",
+        "Submit calls POST /api/wallets with { nickname, initialBalance }",
+        "On success: store walletId and nickname in localStorage, close modal, initialize app",
+        "On error: show error message in modal",
+        "Modal cannot be dismissed without creating wallet",
+        "Client-side validation with inline error messages",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Depends on US-F01 (nickname backend) and US-F04 (API client)."
+    },
+    {
+      "id": "US-F06",
+      "title": "Wallet dashboard — balance and deposit",
+      "description": "As a user, I want to see my wallet balance and deposit funds.",
+      "acceptanceCriteria": [
+        "On app init (after wallet exists), fetch GET /api/wallets/{id}",
+        "Display in header/sidebar: nickname, balance formatted as $X,XXX.XX, wallet ID (first 8 chars)",
+        "Deposit button opens inline form with amount input",
+        "Deposit calls POST /api/wallets/{id}/deposit with { amount }",
+        "Balance updates in UI after successful deposit, show success toast",
+        "Handle wallet-not-found: clear localStorage, show create-wallet modal",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F07",
+      "title": "WebSocket connection and live price display",
+      "description": "As a user, I want to see real-time crypto prices updating live.",
+      "acceptanceCriteria": [
+        "Load SockJS and STOMP.js from CDN (script tags in index.html)",
+        "Connect to STOMP over SockJS at /ws endpoint",
+        "Subscribe to /topic/prices for all price updates",
+        "Display price card for each symbol (BTCUSDT, ETHUSDT)",
+        "Each card shows: symbol name, current price formatted with commas, direction arrow",
+        "Price text flashes green on increase, red on decrease (CSS animation, 300ms)",
+        "Connection status indicator in header: green dot = connected, yellow = reconnecting, red = disconnected",
+        "Auto-reconnect on disconnect with 2s delay",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "First WebSocket story. Keep sparkline for next story to keep scope small."
+    },
+    {
+      "id": "US-F08",
+      "title": "Price sparkline charts",
+      "description": "As a user, I want to see a mini chart of recent price history for each symbol.",
+      "acceptanceCriteria": [
+        "Add canvas element to each price card",
+        "Store last 50 price points per symbol in memory array",
+        "Draw sparkline on canvas: line chart, no axes, just the price curve",
+        "Line color: green if current > first point, red if lower, gray if equal",
+        "Canvas redraws on each new price update",
+        "Canvas size: ~200x60px on desktop, scales on mobile",
+        "Sparkline draws smoothly without flicker",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Canvas-based, no libraries. Keep it simple."
+    },
+    {
+      "id": "US-F09",
+      "title": "Bet placement form with odds and exposure",
+      "description": "As a user, I want to place a bet and see odds, exposure, and estimated payout before confirming.",
+      "acceptanceCriteria": [
+        "Bet panel with: symbol dropdown (BTCUSDT, ETHUSDT), direction toggle (UP/DOWN buttons), amount input",
+        "UP button styled green, DOWN button styled red, selected state highlighted",
+        "On symbol + direction selection, fetch GET /api/odds?symbol={s}&direction={d}",
+        "On symbol selection, fetch GET /api/exposure/{symbol}",
+        "Display: current odds, symbol exposure, estimated payout (amount * odds)",
+        "Estimated payout updates live as amount changes",
+        "Amount validation: min 1, cannot exceed wallet balance",
+        "Submit button disabled until all fields valid",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Form and info display only. Confirmation and API call in next story."
+    },
+    {
+      "id": "US-F10",
+      "title": "Bet placement confirmation and submission",
+      "description": "As a user, I want a confirmation step before my bet is placed.",
+      "acceptanceCriteria": [
+        "Click 'Place Bet' shows confirmation overlay/section with bet summary",
+        "Summary shows: symbol, direction, amount, odds, estimated payout",
+        "Confirm button calls POST /api/bets with { walletId, symbol, direction, amount }",
+        "On success: show success toast with bet ID, refresh wallet balance, clear form",
+        "On error: show error toast (insufficient balance, exposure limit, etc.)",
+        "Buttons disabled during API call to prevent double-submit",
+        "Cancel returns to form without changes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F11",
+      "title": "Active bets display on dashboard",
+      "description": "As a user, I want to see my currently pending bets on the dashboard.",
+      "acceptanceCriteria": [
+        "Section below bet panel showing active/pending bets",
+        "Fetch from GET /api/wallets/{id}/bets?status=PENDING&page=0&size=10",
+        "Each bet shows: symbol, direction (colored), amount, placed time (relative), countdown to resolution",
+        "Countdown updates every second showing time remaining",
+        "Refresh list after placing a new bet",
+        "Empty state message: 'No active bets'",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F12",
+      "title": "Live bet settlement notifications",
+      "description": "As a user, I want real-time notifications when my bets settle.",
+      "acceptanceCriteria": [
+        "Subscribe to /topic/bets/{walletId} via STOMP (reuse existing connection)",
+        "On bet_update event, show toast: green for WON (with payout), red for LOST, yellow for PUSH/VOID",
+        "Auto-refresh wallet balance after receiving settlement",
+        "Remove settled bet from active bets list",
+        "If on history view, refresh history data",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F13",
+      "title": "Bet history view with filters and pagination",
+      "description": "As a user, I want to browse my past bets to review my performance.",
+      "acceptanceCriteria": [
+        "History view accessible via navigation tab",
+        "Fetch from GET /api/wallets/{id}/bets?page=0&size=20",
+        "Filter tabs: All, Won, Lost, Push, Void — each calls API with status param",
+        "Table/list: symbol, direction, amount, odds, payout, status badge, placed time, settled time",
+        "Status badges color-coded: green=WON, red=LOST, yellow=PUSH, gray=VOID",
+        "Pagination: Previous/Next buttons, 'Page X of Y' indicator",
+        "Active tab highlighted, filter persists when paginating",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F14",
+      "title": "Wallet switching",
+      "description": "As a user, I want to switch between wallets or create a new one.",
+      "acceptanceCriteria": [
+        "Wallet section in header is clickable, opens dropdown menu",
+        "Dropdown shows: current nickname, wallet ID (truncated)",
+        "Option: 'Switch Wallet' — shows input for wallet ID, validates via GET /api/wallets/{id}",
+        "Option: 'Create New Wallet' — opens the create-wallet modal",
+        "On switch: update localStorage, reinitialize app (reload all data, resubscribe WebSocket)",
+        "Invalid wallet ID shows error in dropdown",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-F15",
+      "title": "Loading states and error handling polish",
+      "description": "As a user, I want clear feedback when things are loading or go wrong.",
+      "acceptanceCriteria": [
+        "Loading spinner shown during initial wallet fetch",
+        "Skeleton placeholder cards for price ticker while WebSocket connects",
+        "All buttons show loading state (spinner/disabled) during API calls",
+        "Network failure: banner at top 'Connection lost — retrying...' with retry countdown",
+        "API errors show user-friendly messages (not raw JSON)",
+        "Wallet not found on load: clear state, show create modal with explanation",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Polish pass. All core features should work before this story."
+    }
+  ]
+}

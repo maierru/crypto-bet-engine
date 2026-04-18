@@ -21,9 +21,5 @@ public record PlaceBetRequest(
         @Positive(message = "Stake must be positive")
         BigDecimal stake,
 
-        @NotNull(message = "Entry price is required")
-        @Positive(message = "Entry price must be positive")
-        BigDecimal entryPrice,
-
         Integer durationSeconds
 ) {}

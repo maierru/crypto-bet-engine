@@ -178,10 +178,12 @@
         renderWalletCard(wallet);
         loadActiveBets();
       })
-      .catch(function () {
-        clearStoredWallet();
-        updateWalletIndicator(null);
-        showWalletModal();
+      .catch(function (err) {
+        if (err.message && err.message.indexOf('not found') !== -1) {
+          clearStoredWallet();
+          updateWalletIndicator(null);
+          showWalletModal();
+        }
       });
   }
 
@@ -300,9 +302,9 @@
 
     setConnStatus('connecting');
 
-    var socket = new SockJS('/ws');
+    var wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     stompClient = new StompJs.Client({
-      webSocketFactory: function () { return socket; },
+      brokerURL: wsProtocol + '//' + window.location.host + '/ws',
       reconnectDelay: 5000,
       onConnect: function () {
         setConnStatus('connected');
@@ -360,7 +362,9 @@
 
   var priceHistory = {}; // { symbol: [price1, price2, ...] }
   var lastPrices = {};   // { symbol: lastPrice }
+  var lastRender = {};   // { symbol: timestamp }
   var MAX_HISTORY = 50;
+  var RENDER_INTERVAL = 1000; // max 1 DOM update per second per symbol
 
   function handlePriceUpdate(data) {
     var symbol = data.symbol;
@@ -376,6 +380,10 @@
       priceHistory[symbol].shift();
     }
 
+    var now = Date.now();
+    if (lastRender[symbol] && now - lastRender[symbol] < RENDER_INTERVAL) return;
+    lastRender[symbol] = now;
+
     renderPriceCard(symbol, price, prev);
   }
 
@@ -385,11 +393,16 @@
     var card = document.getElementById(cardId);
 
     if (!card) {
-      // Clear placeholder text on first card
-      if (!container.querySelector('.price-grid')) {
-        container.innerHTML = '<div class="price-grid" id="price-grid"></div>';
+      var grid = container.querySelector('.price-grid');
+      if (grid) {
+        // Clear skeleton placeholders on first real price
+        grid.innerHTML = '';
+      } else {
+        grid = document.createElement('div');
+        grid.className = 'price-grid';
+        container.innerHTML = '';
+        container.appendChild(grid);
       }
-      var grid = document.getElementById('price-grid');
       card = document.createElement('div');
       card.className = 'price-card';
       card.id = cardId;
@@ -544,7 +557,7 @@
 
     api('GET', '/api/exposure/' + symbol)
       .then(function (data) {
-        betExposureEl.textContent = '$' + Number(data.exposure).toFixed(2);
+        betExposureEl.textContent = '$' + Number(data.totalExposure).toFixed(2);
       })
       .catch(function () {
         betExposureEl.textContent = '—';
@@ -584,14 +597,14 @@
       walletId: stored.id,
       symbol: symbol,
       direction: selectedDirection,
-      amount: amount
+      stake: amount
     };
 
     var payout = currentOdds ? (amount * currentOdds).toFixed(2) : '—';
     betConfirmDetails.innerHTML =
       '<div class="bet-confirm__row"><span class="text--muted">Symbol</span><span class="text--mono">' + escapeHtml(symbol) + '</span></div>' +
       '<div class="bet-confirm__row"><span class="text--muted">Direction</span><span class="' + (selectedDirection === 'UP' ? 'text--up' : 'text--down') + '">' + selectedDirection + '</span></div>' +
-      '<div class="bet-confirm__row"><span class="text--muted">Amount</span><span class="text--mono">$' + amount.toFixed(2) + '</span></div>' +
+      '<div class="bet-confirm__row"><span class="text--muted">Stake</span><span class="text--mono">$' + amount.toFixed(2) + '</span></div>' +
       '<div class="bet-confirm__row"><span class="text--muted">Odds</span><span class="text--mono">' + (currentOdds ? currentOdds.toFixed(4) : '—') + '</span></div>' +
       '<div class="bet-confirm__row"><span class="text--muted">Est. Payout</span><span class="text--mono text--up">$' + payout + '</span></div>';
 
@@ -611,7 +624,7 @@
 
     api('POST', '/api/bets', pendingBet)
       .then(function () {
-        showToast('Bet placed! ' + pendingBet.direction + ' ' + pendingBet.symbol + ' for $' + pendingBet.amount.toFixed(2), 'success');
+        showToast('Bet placed! ' + pendingBet.direction + ' ' + pendingBet.symbol + ' for $' + pendingBet.stake.toFixed(2), 'success');
         betConfirmModal.style.display = 'none';
         betAmountEl.value = '';
         currentOdds = null;
@@ -661,8 +674,9 @@
       showToast('Bet update: ' + status, 'info');
     }
 
-    // Refresh wallet and active bets
+    // Refresh wallet and active bets independently
     loadWalletDetails();
+    loadActiveBets();
   }
 
   // --- Active Bets Display ---
@@ -705,7 +719,7 @@
             '<span class="' + dirClass + '">' + dirArrow + ' ' + bet.direction + '</span>' +
           '</div>' +
           '<div class="active-bet__info">' +
-            '<span class="text--mono">$' + Number(bet.amount).toFixed(2) + '</span>' +
+            '<span class="text--mono">$' + Number(bet.stake).toFixed(2) + '</span>' +
             '<span class="active-bet__countdown" data-resolve="' + escapeHtml(bet.resolveAt || '') + '"></span>' +
           '</div>' +
         '</div>';
@@ -717,15 +731,19 @@
     countdownInterval = setInterval(updateCountdowns, 1000);
   }
 
+  var settlingPollTimer = null;
+
   function updateCountdowns() {
     var els = activeBetsContainer.querySelectorAll('.active-bet__countdown[data-resolve]');
     var now = Date.now();
+    var anySettling = false;
     els.forEach(function (el) {
       var resolveAt = el.getAttribute('data-resolve');
       if (!resolveAt) { el.textContent = ''; return; }
       var diff = new Date(resolveAt).getTime() - now;
       if (diff <= 0) {
         el.textContent = 'Settling...';
+        anySettling = true;
       } else {
         var secs = Math.ceil(diff / 1000);
         var mins = Math.floor(secs / 60);
@@ -733,6 +751,17 @@
         el.textContent = mins + ':' + (s < 10 ? '0' : '') + s;
       }
     });
+
+    // Poll for settlement results when bets are past resolve time
+    if (anySettling && !settlingPollTimer) {
+      settlingPollTimer = setInterval(function () {
+        loadActiveBets();
+        loadWalletDetails();
+      }, 3000);
+    } else if (!anySettling && settlingPollTimer) {
+      clearInterval(settlingPollTimer);
+      settlingPollTimer = null;
+    }
   }
 
   // --- Bet History ---
@@ -807,7 +836,7 @@
       html += '<tr>' +
         '<td class="text--mono">' + escapeHtml(bet.symbol) + '</td>' +
         '<td class="' + dirClass + '">' + bet.direction + '</td>' +
-        '<td class="text--mono">$' + Number(bet.amount).toFixed(2) + '</td>' +
+        '<td class="text--mono">$' + Number(bet.stake).toFixed(2) + '</td>' +
         '<td class="text--mono">' + odds + '</td>' +
         '<td class="text--mono">' + payout + '</td>' +
         '<td><span class="badge ' + statusClass + '">' + bet.status + '</span></td>' +

@@ -1,6 +1,8 @@
 package com.cryptobet.engine.odds;
 
+import com.cryptobet.engine.price.PriceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +28,15 @@ class OddsControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private PriceService priceService;
+
+    @BeforeEach
+    void seedPrices() {
+        priceService.updatePrice("BTCUSDT", new BigDecimal("65000.00"));
+        priceService.updatePrice("ETHUSDT", new BigDecimal("3500.00"));
+    }
 
     @Test
     void getOdds_returnsCurrentOddsWithVig() throws Exception {
@@ -78,8 +89,7 @@ class OddsControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "100.00",
-                    "entryPrice": "65000.00"
+                    "stake": "100.00"
                 }
                 """.formatted(walletId);
 

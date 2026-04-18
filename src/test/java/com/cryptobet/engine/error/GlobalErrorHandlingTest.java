@@ -1,6 +1,8 @@
 package com.cryptobet.engine.error;
 
+import com.cryptobet.engine.price.PriceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +29,15 @@ class GlobalErrorHandlingTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private PriceService priceService;
+
+    @BeforeEach
+    void seedPrices() {
+        priceService.updatePrice("BTCUSDT", new BigDecimal("65000.00"));
+        priceService.updatePrice("ETHUSDT", new BigDecimal("3500.00"));
+    }
+
     // --- Validation errors return 400 with consistent format ---
 
     @Test
@@ -43,8 +54,7 @@ class GlobalErrorHandlingTest {
                 .andExpect(jsonPath("$.details.walletId").exists())
                 .andExpect(jsonPath("$.details.symbol").exists())
                 .andExpect(jsonPath("$.details.direction").exists())
-                .andExpect(jsonPath("$.details.stake").exists())
-                .andExpect(jsonPath("$.details.entryPrice").exists());
+                .andExpect(jsonPath("$.details.stake").exists());
     }
 
     @Test
@@ -55,8 +65,7 @@ class GlobalErrorHandlingTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "-10.00",
-                    "entryPrice": "65000.00"
+                    "stake": "-10.00"
                 }
                 """.formatted(walletId);
 
@@ -123,8 +132,7 @@ class GlobalErrorHandlingTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "100.00",
-                    "entryPrice": "65000.00"
+                    "stake": "100.00"
                 }
                 """.formatted(walletId);
 

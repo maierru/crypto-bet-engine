@@ -35,8 +35,7 @@ public class BetWebSocketHandler {
         payload.put("status", event.status().name());
         payload.put("payout", event.payout().setScale(2, RoundingMode.HALF_UP).toPlainString());
 
-        String json = payload.toString();
-        messagingTemplate.convertAndSend("/topic/bets/" + event.walletId(), json);
+        messagingTemplate.convertAndSend("/topic/bets/" + event.walletId(), payload);
 
         log.debug("Bet update pushed via WebSocket: bet={} status={}", event.betId(), event.status());
     }

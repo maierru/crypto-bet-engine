@@ -29,10 +29,8 @@ public class PriceWebSocketHandler {
         payload.put("price", event.price().toPlainString());
         payload.put("timestamp", event.timestamp());
 
-        String json = payload.toString();
-
-        messagingTemplate.convertAndSend("/topic/prices", json);
-        messagingTemplate.convertAndSend("/topic/prices/" + event.symbol(), json);
+        messagingTemplate.convertAndSend("/topic/prices", payload);
+        messagingTemplate.convertAndSend("/topic/prices/" + event.symbol(), payload);
 
         log.debug("Price update pushed via WebSocket: {} = {}", event.symbol(), event.price());
     }

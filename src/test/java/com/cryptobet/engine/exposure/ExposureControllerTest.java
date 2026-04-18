@@ -1,5 +1,6 @@
 package com.cryptobet.engine.exposure;
 
+import com.cryptobet.engine.price.PriceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,12 +33,17 @@ class ExposureControllerTest {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private PriceService priceService;
+
     @BeforeEach
     void setUp() {
         var keys = redisTemplate.keys("exposure:*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
+        priceService.updatePrice("BTCUSDT", new BigDecimal("65000.00"));
+        priceService.updatePrice("ETHUSDT", new BigDecimal("3500.00"));
     }
 
     @Test
@@ -59,8 +65,7 @@ class ExposureControllerTest {
                     "walletId": "%s",
                     "symbol": "BTCUSDT",
                     "direction": "UP",
-                    "stake": "100.00",
-                    "entryPrice": "65000.00"
+                    "stake": "100.00"
                 }
                 """.formatted(walletId);
 
@@ -86,8 +91,7 @@ class ExposureControllerTest {
                         "walletId": "%s",
                         "symbol": "ETHUSDT",
                         "direction": "UP",
-                        "stake": "50.00",
-                        "entryPrice": "3500.00"
+                        "stake": "50.00"
                     }
                     """.formatted(walletId);
 

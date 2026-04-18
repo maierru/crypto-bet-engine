@@ -4,6 +4,7 @@ import com.cryptobet.engine.bet.dto.BetResponse;
 import com.cryptobet.engine.bet.dto.PlaceBetRequest;
 import com.cryptobet.engine.exposure.ExposureService;
 import com.cryptobet.engine.odds.OddsService;
+import com.cryptobet.engine.price.PriceService;
 import com.cryptobet.engine.wallet.WalletNotFoundException;
 import com.cryptobet.engine.wallet.WalletRepository;
 import com.cryptobet.engine.websocket.BetUpdateEvent;
@@ -27,17 +28,19 @@ public class BetService {
     private final WalletRepository walletRepository;
     private final OddsService oddsService;
     private final ExposureService exposureService;
+    private final PriceService priceService;
     private final ApplicationEventPublisher eventPublisher;
     private final int defaultDurationSeconds;
 
     public BetService(BetRepository betRepository, WalletRepository walletRepository,
                       OddsService oddsService, ExposureService exposureService,
-                      ApplicationEventPublisher eventPublisher,
+                      PriceService priceService, ApplicationEventPublisher eventPublisher,
                       @Value("${betting.default-duration-seconds:60}") int defaultDurationSeconds) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
         this.oddsService = oddsService;
         this.exposureService = exposureService;
+        this.priceService = priceService;
         this.eventPublisher = eventPublisher;
         this.defaultDurationSeconds = defaultDurationSeconds;
     }
@@ -46,13 +49,16 @@ public class BetService {
     public BetResponse placeBet(PlaceBetRequest request) {
         var direction = BetDirection.valueOf(request.direction());
 
+        var entryPrice = priceService.getPrice(request.symbol())
+                .orElseThrow(() -> new IllegalArgumentException("Price not available for " + request.symbol()));
+
         var wallet = walletRepository.findByIdForUpdate(request.walletId())
                 .orElseThrow(() -> new WalletNotFoundException(request.walletId()));
 
         wallet.deductStake(request.stake());
         walletRepository.save(wallet);
 
-        var bet = new Bet(request.walletId(), request.symbol(), direction, request.stake(), request.entryPrice());
+        var bet = new Bet(request.walletId(), request.symbol(), direction, request.stake(), entryPrice);
         bet.setOdds(oddsService.calculateOdds());
         bet.setPotentialPayout(oddsService.calculatePotentialPayout(request.stake()));
         int duration = request.durationSeconds() != null ? request.durationSeconds() : defaultDurationSeconds;

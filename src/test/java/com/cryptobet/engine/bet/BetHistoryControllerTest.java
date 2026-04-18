@@ -1,6 +1,8 @@
 package com.cryptobet.engine.bet;
 
+import com.cryptobet.engine.price.PriceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,6 +32,16 @@ class BetHistoryControllerTest {
     @Autowired
     private BetRepository betRepository;
 
+    @Autowired
+    private PriceService priceService;
+
+    @BeforeEach
+    void seedPrices() {
+        priceService.updatePrice("BTCUSDT", new BigDecimal("65000.00"));
+        priceService.updatePrice("ETHUSDT", new BigDecimal("3500.00"));
+        priceService.updatePrice("SOLUSDT", new BigDecimal("150.00"));
+    }
+
     private String createWalletAndGetId(BigDecimal balance) throws Exception {
         var body = """
                 {"initialBalance": "%s"}
@@ -50,8 +62,7 @@ class BetHistoryControllerTest {
                     "walletId": "%s",
                     "symbol": "%s",
                     "direction": "%s",
-                    "stake": "10.00",
-                    "entryPrice": "65000.00"
+                    "stake": "10.00"
                 }
                 """.formatted(walletId, symbol, direction);
 
