@@ -131,9 +131,9 @@ module E2EHelpers
     @browser.at_css(".bet-dir-btn[data-dir='#{direction}']").click
     fill_input("#bet-amount", amount)
     wait_for("#bet-submit-btn:not([disabled])", timeout: 5)
-    @browser.at_css("#bet-submit-btn").click
+    @browser.evaluate("document.querySelector('#bet-submit-btn').click()")
     wait_for_visible("#bet-confirm-modal")
-    @browser.at_css("#bet-confirm-btn").click
+    @browser.evaluate("document.querySelector('#bet-confirm-btn').click()")
     wait_for_hidden("#bet-confirm-modal")
   end
 
