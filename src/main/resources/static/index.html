@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Bet Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header__brand">
+      <span class="header__logo">&#9670;</span>
+      <h1 class="header__title">Crypto Bet Engine</h1>
+    </div>
+    <div class="header__wallet" id="wallet-indicator">
+      <span class="header__wallet-icon">&#128179;</span>
+      <span class="header__wallet-name" id="wallet-name">No Wallet</span>
+      <span class="header__wallet-balance" id="wallet-balance"></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+      <ul class="sidebar__nav">
+        <li>
+          <a href="#" class="sidebar__link sidebar__link--active" data-view="dashboard">
+            <span class="sidebar__icon">&#9632;</span>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#" class="sidebar__link" data-view="history">
+            <span class="sidebar__icon">&#9776;</span>
+            Bet History
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Dashboard View -->
+      <section class="view view--active" id="view-dashboard">
+        <h2 class="view__title">Dashboard</h2>
+
+        <!-- Wallet Card -->
+        <div class="card" id="wallet-card">
+          <div class="card__header">Wallet</div>
+          <div class="card__body" id="wallet-details">
+            <p class="text--muted">Create a wallet to get started.</p>
+          </div>
+        </div>
+
+        <!-- Price Ticker -->
+        <div class="card" id="price-card">
+          <div class="card__header">Live Prices</div>
+          <div class="card__body" id="price-ticker">
+            <p class="text--muted">Connecting to price feed...</p>
+          </div>
+        </div>
+
+        <!-- Bet Placement -->
+        <div class="card" id="bet-card">
+          <div class="card__header">Place Bet</div>
+          <div class="card__body" id="bet-form-container">
+            <p class="text--muted">Select a symbol to place a bet.</p>
+          </div>
+        </div>
+
+        <!-- Active Bets -->
+        <div class="card" id="active-bets-card">
+          <div class="card__header">Active Bets</div>
+          <div class="card__body" id="active-bets">
+            <p class="text--muted">No active bets — place one above!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bet History View -->
+      <section class="view" id="view-history">
+        <h2 class="view__title">Bet History</h2>
+        <div class="card">
+          <div class="card__header">History</div>
+          <div class="card__body" id="bet-history">
+            <p class="text--muted">No bet history yet.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Wallet Creation Modal -->
+  <div class="modal-overlay" id="wallet-modal" style="display:none;">
+    <div class="modal">
+      <h2 class="modal__title">Welcome to Crypto Bet Engine</h2>
+      <p class="modal__subtitle">Create a wallet to get started</p>
+      <form id="create-wallet-form" class="form">
+        <div class="form__group">
+          <label class="form__label" for="wallet-nickname">Nickname</label>
+          <input class="form__input" type="text" id="wallet-nickname" placeholder="e.g. Satoshi" minlength="2" required>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="wallet-initial-balance">Initial Balance (USD)</label>
+          <input class="form__input form__input--mono" type="number" id="wallet-initial-balance" placeholder="1000" min="0.01" step="0.01" required>
+        </div>
+        <div class="form__error" id="wallet-form-error"></div>
+        <button class="btn btn--primary btn--full" type="submit">Create Wallet</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
