@@ -18,6 +18,12 @@
 - PriceService stores latest prices in ConcurrentHashMap — use `getPrice(symbol)` for current price
 - BinancePriceFeed connects to Binance via Java HttpClient WebSocket — disable in tests with `binance.symbols: ""`
 - Binance config: `binance.ws-url` and `binance.symbols` (CSV) in application.yml
+- `@Scheduled` methods must NOT call `@Transactional` methods on `this` (self-invocation bypasses proxy) — split scheduler + service into separate beans
+- `@EnableScheduling` on main application class
+- Settlement: SettlementScheduler (scheduler) calls SettlementService (transactional per-bet logic)
+- Bet entity has `resolveAt` (expiry), `priceAtResolution`, `resolvedAt` fields for settlement
+- BetStatus: OPEN, WON, LOST, PUSH, CANCELLED
+- PlaceBetRequest accepts optional `durationSeconds` (defaults to `betting.default-duration-seconds: 60`)
 
 ---
 
@@ -149,4 +155,38 @@
   - Disable Binance feed in tests by setting `binance.symbols: ""` — empty string means no connection
   - BinancePriceFeed.handleMessage() is package-private for direct unit testing without actual WS connection
   - Auto-reconnect with 5s delay via ScheduledExecutorService handles connection drops gracefully
+---
+
+## 2026-04-18 - US-007
+- Settlement scheduler: auto-resolves expired bets every 1 second
+- SettlementScheduler (@Scheduled) + SettlementService (@Transactional per bet) — split to avoid self-invocation proxy bypass
+- Settlement logic: UP bet wins if price > entry, DOWN bet wins if price < entry, PUSH if equal
+- WON: wallet credited potentialPayout, LOST: no action, PUSH: stake refunded
+- Redis exposure decremented after each settlement
+- Batch limit: 100 bets per cycle via Pageable
+- Added PUSH to BetStatus enum
+- Added resolveAt, priceAtResolution, resolvedAt to Bet entity
+- PlaceBetRequest extended with optional durationSeconds (default 60s)
+- @EnableScheduling added to main application class
+- V4 migration: adds settlement columns + partial index on (status, resolve_at) WHERE status='OPEN'
+- TDD: 8 tests (won UP, won DOWN, lost, push, records resolution data, only expired bets, exposure decrement, batch limit)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/settlement/SettlementService.java (new)
+  - src/main/java/com/cryptobet/engine/settlement/SettlementScheduler.java (new)
+  - src/main/java/com/cryptobet/engine/bet/Bet.java (added resolveAt, priceAtResolution, resolvedAt)
+  - src/main/java/com/cryptobet/engine/bet/BetStatus.java (added PUSH)
+  - src/main/java/com/cryptobet/engine/bet/BetRepository.java (added findSettleableBets query)
+  - src/main/java/com/cryptobet/engine/bet/BetService.java (set resolveAt on placement, configurable duration)
+  - src/main/java/com/cryptobet/engine/bet/dto/PlaceBetRequest.java (added durationSeconds)
+  - src/main/java/com/cryptobet/engine/bet/dto/BetResponse.java (added resolveAt, priceAtResolution, resolvedAt)
+  - src/main/java/com/cryptobet/engine/CryptoBetEngineApplication.java (added @EnableScheduling)
+  - src/main/resources/db/migration/V4__add_settlement_columns_to_bets.sql (new)
+  - src/main/resources/application.yml (added betting.default-duration-seconds)
+  - src/test/resources/application-test.yml (added betting.default-duration-seconds)
+  - src/test/java/com/cryptobet/engine/settlement/SettlementServiceTest.java (new)
+- **Learnings for future iterations:**
+  - @Scheduled + @Transactional self-invocation bypasses Spring AOP proxy — always split into separate beans
+  - Tests using findByIdForUpdate() need a transaction context — simpler to set wallet to post-deduction balance directly
+  - H2 partial index syntax differs from PostgreSQL — but Flyway is disabled in tests so no issue
+  - BetResponse uses @JsonInclude(NON_NULL) for optional settlement fields
 ---

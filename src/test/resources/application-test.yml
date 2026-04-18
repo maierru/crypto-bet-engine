@@ -20,6 +20,7 @@ spring:
 
 betting:
   vig-rate: 0.05
+  default-duration-seconds: 60
 
 binance:
   ws-url: wss://stream.binance.com:9443/ws

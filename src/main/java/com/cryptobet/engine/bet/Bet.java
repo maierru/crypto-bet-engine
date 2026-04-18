@@ -36,6 +36,15 @@ public class Bet {
     @Column(name = "potential_payout", nullable = false, precision = 19, scale = 4)
     private BigDecimal potentialPayout = BigDecimal.ZERO;
 
+    @Column(name = "resolve_at")
+    private Instant resolveAt;
+
+    @Column(name = "price_at_resolution", precision = 19, scale = 4)
+    private BigDecimal priceAtResolution;
+
+    @Column(name = "resolved_at")
+    private Instant resolvedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private BetStatus status = BetStatus.OPEN;
@@ -76,6 +85,9 @@ public class Bet {
     public BigDecimal getEntryPrice() { return entryPrice; }
     public BigDecimal getOdds() { return odds; }
     public BigDecimal getPotentialPayout() { return potentialPayout; }
+    public Instant getResolveAt() { return resolveAt; }
+    public BigDecimal getPriceAtResolution() { return priceAtResolution; }
+    public Instant getResolvedAt() { return resolvedAt; }
     public BetStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
@@ -90,5 +102,17 @@ public class Bet {
 
     public void setStatus(BetStatus status) {
         this.status = status;
+    }
+
+    public void setResolveAt(Instant resolveAt) {
+        this.resolveAt = resolveAt;
+    }
+
+    public void setPriceAtResolution(BigDecimal priceAtResolution) {
+        this.priceAtResolution = priceAtResolution.setScale(4, RoundingMode.HALF_UP);
+    }
+
+    public void setResolvedAt(Instant resolvedAt) {
+        this.resolvedAt = resolvedAt;
     }
 }

@@ -2,10 +2,13 @@ package com.cryptobet.engine.bet.dto;
 
 import com.cryptobet.engine.bet.Bet;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record BetResponse(
         UUID id,
         UUID walletId,
@@ -19,6 +22,10 @@ public record BetResponse(
         BigDecimal odds,
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         BigDecimal potentialPayout,
+        Instant resolveAt,
+        @JsonFormat(shape = JsonFormat.Shape.STRING)
+        BigDecimal priceAtResolution,
+        Instant resolvedAt,
         String status
 ) {
 
@@ -32,6 +39,9 @@ public record BetResponse(
                 bet.getEntryPrice().setScale(2),
                 bet.getOdds().setScale(4),
                 bet.getPotentialPayout().setScale(2),
+                bet.getResolveAt(),
+                bet.getPriceAtResolution() != null ? bet.getPriceAtResolution().setScale(2) : null,
+                bet.getResolvedAt(),
                 bet.getStatus().name()
         );
     }

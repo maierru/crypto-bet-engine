@@ -8,5 +8,6 @@ public record PlaceBetRequest(
         String symbol,
         String direction,
         BigDecimal stake,
-        BigDecimal entryPrice
+        BigDecimal entryPrice,
+        Integer durationSeconds
 ) {}

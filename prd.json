@@ -36,7 +36,7 @@
     {
       "id": "US-007",
       "title": "Settlement Scheduler",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-008",

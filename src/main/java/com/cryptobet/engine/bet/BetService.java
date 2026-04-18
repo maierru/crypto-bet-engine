@@ -9,7 +9,10 @@ import com.cryptobet.engine.wallet.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -19,13 +22,16 @@ public class BetService {
     private final WalletRepository walletRepository;
     private final OddsService oddsService;
     private final ExposureService exposureService;
+    private final int defaultDurationSeconds;
 
     public BetService(BetRepository betRepository, WalletRepository walletRepository,
-                      OddsService oddsService, ExposureService exposureService) {
+                      OddsService oddsService, ExposureService exposureService,
+                      @Value("${betting.default-duration-seconds:60}") int defaultDurationSeconds) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
         this.oddsService = oddsService;
         this.exposureService = exposureService;
+        this.defaultDurationSeconds = defaultDurationSeconds;
     }
 
     @Transactional
@@ -45,6 +51,8 @@ public class BetService {
         var bet = new Bet(request.walletId(), request.symbol(), direction, request.stake(), request.entryPrice());
         bet.setOdds(oddsService.calculateOdds());
         bet.setPotentialPayout(oddsService.calculatePotentialPayout(request.stake()));
+        int duration = request.durationSeconds() != null ? request.durationSeconds() : defaultDurationSeconds;
+        bet.setResolveAt(Instant.now().plusSeconds(duration));
         bet = betRepository.save(bet);
 
         exposureService.addExposure(bet.getSymbol(), bet.getPotentialPayout());
