@@ -503,3 +503,17 @@
   - `setInterval` for countdown cleanup: clear previous interval before starting new one to avoid leaks
   - Active bets loaded inside `loadWalletDetails()` success callback to ensure wallet context exists
 ---
+
+## 2026-04-18 - US-F12
+- Live bet settlement: subscribe to `/topic/bets/{walletId}` via STOMP
+- Toast notifications: green for WON (with payout), red for LOST, yellow for PUSH
+- Auto-refresh wallet balance and active bets list on settlement
+- Subscription auto-resubscribes on WebSocket reconnect
+- Files changed:
+  - src/main/resources/static/js/app.js (subscribeToBetUpdates, handleBetUpdate)
+  - prd.json (US-F12 passes: true)
+- **Learnings for future iterations:**
+  - `subscribeToBetUpdates()` called inside `onConnect` alongside `subscribeToPrices()`
+  - OPEN status events from bet placement are ignored (only settlement matters for notifications)
+  - `loadWalletDetails()` already calls `loadActiveBets()` — single call refreshes everything
+---

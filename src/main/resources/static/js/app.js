@@ -310,8 +310,9 @@
             cb(JSON.parse(msg.body));
           });
         });
-        // Subscribe to price feed
+        // Subscribe to price feed and bet updates
         subscribeToPrices();
+        subscribeToBetUpdates();
       },
       onStompError: function () {
         setConnStatus('disconnected');
@@ -625,6 +626,38 @@
         validateBetForm();
       });
   });
+
+  // --- Live Bet Settlement ---
+
+  function subscribeToBetUpdates() {
+    var stored = getStoredWallet();
+    if (!stored) return;
+    var topic = '/topic/bets/' + stored.id;
+    wsSubscribe(topic, function (data) {
+      handleBetUpdate(data);
+    });
+  }
+
+  function handleBetUpdate(data) {
+    var status = data.status;
+    var payout = data.payout ? '$' + Number(data.payout).toFixed(2) : '';
+
+    if (status === 'WON') {
+      showToast('Bet won! Payout: ' + payout, 'success');
+    } else if (status === 'LOST') {
+      showToast('Bet lost.', 'error');
+    } else if (status === 'PUSH') {
+      showToast('Bet push — stake returned.', 'warn');
+    } else if (status === 'OPEN') {
+      // New bet placed notification (from another client/tab)
+      return;
+    } else {
+      showToast('Bet update: ' + status, 'info');
+    }
+
+    // Refresh wallet and active bets
+    loadWalletDetails();
+  }
 
   // --- Active Bets Display ---
 

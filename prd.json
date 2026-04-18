@@ -61,7 +61,7 @@
     {
       "id": "US-F12",
       "title": "Live Bet Settlement Notifications",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F13",
