@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -42,12 +43,19 @@ class SettlementServiceTest {
     @Autowired
     private ExposureService exposureService;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     private Wallet savedWallet;
 
     @BeforeEach
     void setUp() {
         betRepository.deleteAll();
         walletRepository.deleteAll();
+        var keys = redisTemplate.keys("exposure:*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
     }
 
     private Wallet createWallet(BigDecimal balance) {

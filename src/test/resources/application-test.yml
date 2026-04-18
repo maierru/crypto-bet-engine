@@ -22,6 +22,9 @@ betting:
   vig-rate: 0.05
   default-duration-seconds: 60
 
+settlement:
+  scheduling-enabled: false
+
 binance:
   ws-url: wss://stream.binance.com:9443/ws
   symbols: ""

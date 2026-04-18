@@ -6,6 +6,7 @@ import com.cryptobet.engine.bet.BetStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,13 +21,23 @@ public class SettlementScheduler {
 
     private final BetRepository betRepository;
     private final SettlementService settlementService;
+    private final boolean schedulingEnabled;
 
-    public SettlementScheduler(BetRepository betRepository, SettlementService settlementService) {
+    public SettlementScheduler(
+            BetRepository betRepository,
+            SettlementService settlementService,
+            @Value("${settlement.scheduling-enabled:true}") boolean schedulingEnabled) {
         this.betRepository = betRepository;
         this.settlementService = settlementService;
+        this.schedulingEnabled = schedulingEnabled;
     }
 
     @Scheduled(fixedDelay = 1000)
+    public void scheduledSettle() {
+        if (!schedulingEnabled) return;
+        settleBets();
+    }
+
     public void settleBets() {
         List<Bet> expiredBets = betRepository.findSettleableBets(
                 BetStatus.OPEN, Instant.now(), PageRequest.of(0, BATCH_SIZE));

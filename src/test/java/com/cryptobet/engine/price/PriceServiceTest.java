@@ -14,7 +14,7 @@ class PriceServiceTest {
 
     @BeforeEach
     void setUp() {
-        priceService = new PriceService();
+        priceService = new PriceService(event -> {});
     }
 
     @Test

@@ -16,7 +16,7 @@ class BinancePriceFeedTest {
 
     @BeforeEach
     void setUp() {
-        priceService = new PriceService();
+        priceService = new PriceService(event -> {});
         // Create feed with auto-connect disabled (no symbols)
         priceFeed = new BinancePriceFeed(priceService, objectMapper, "wss://stream.binance.com:9443/ws", "");
     }
