@@ -8,7 +8,10 @@
 - Package: `com.cryptobet.engine`
 - UUID primary keys everywhere
 - All `@SpringBootTest` classes MUST include `@AutoConfigureMockMvc` to share context and avoid embedded Redis port conflicts
-- Monetary amounts serialized as strings via `@JsonFormat(shape = STRING)` with `setScale(2)` in response DTOs
+- Monetary amounts serialized as strings via `@JsonFormat(shape = STRING)` with `setScale(2, RoundingMode.HALF_UP)` in response DTOs
+- Always use `setScale(n, RoundingMode.HALF_UP)` — never bare `setScale(n)` which throws ArithmeticException on non-exact values
+- Paginated endpoints: use Spring Data `Page<T>` return type with `PageRequest.of(page, size)` — returns `content`, `totalElements`, `totalPages`, `number`
+- Wallet-scoped bet listing: `GET /api/wallets/{id}/bets?status=X&page=0&size=20` on WalletController, delegates to BetService
 - Wallet balance mutations use pessimistic locking via `findByIdForUpdate()` (SELECT FOR UPDATE)
 - Feature packages: `com.cryptobet.engine.<feature>` with `dto` sub-package for request/response records
 - Configurable properties use `@Value("${betting.prop-name:default}")` pattern
@@ -222,4 +225,23 @@
   - Disable schedulers in test profile with property flags rather than removing `@EnableScheduling`
   - Spring ApplicationEventPublisher is a clean way to decouple price updates from WS broadcasting
   - Unit tests constructing PriceService directly need a no-op `event -> {}` publisher
+---
+
+## 2026-04-18 - US-009
+- Bet status and history API: paginated bet listing per wallet with optional status filter
+- GET /api/wallets/{walletId}/bets?status=WON&page=0&size=20 — returns Spring Data Page<BetResponse>
+- Repository: findByWalletIdOrderByCreatedAtDesc and findByWalletIdAndStatusOrderByCreatedAtDesc
+- Fixed pre-existing bug: BetResponse.from() used bare setScale(2) without RoundingMode — throws ArithmeticException on non-exact values (e.g., potentialPayout=19.0480)
+- TDD: 5 tests (paginated sorted desc, filter by status, all fields present, empty wallet returns empty list, pagination params work)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/bet/BetRepository.java (added wallet query methods)
+  - src/main/java/com/cryptobet/engine/bet/BetService.java (added getBetsForWallet method)
+  - src/main/java/com/cryptobet/engine/bet/dto/BetResponse.java (fixed setScale to use RoundingMode.HALF_UP)
+  - src/main/java/com/cryptobet/engine/wallet/WalletController.java (added GET /{id}/bets endpoint)
+  - src/test/java/com/cryptobet/engine/bet/BetHistoryControllerTest.java (new)
+- **Learnings for future iterations:**
+  - Always use `setScale(n, RoundingMode.HALF_UP)` — bare `setScale(n)` throws on non-terminating decimals
+  - Spring Data derived query methods (findByXOrderByYDesc) with Page return type auto-handle pagination
+  - Wallet-scoped endpoints go on WalletController to keep URL structure clean (/api/wallets/{id}/bets)
+  - BetService handles both filtered and unfiltered queries via null-check on status param
 ---

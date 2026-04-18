@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -35,12 +36,12 @@ public record BetResponse(
                 bet.getWalletId(),
                 bet.getSymbol(),
                 bet.getDirection().name(),
-                bet.getStake().setScale(2),
-                bet.getEntryPrice().setScale(2),
-                bet.getOdds().setScale(4),
-                bet.getPotentialPayout().setScale(2),
+                bet.getStake().setScale(2, RoundingMode.HALF_UP),
+                bet.getEntryPrice().setScale(2, RoundingMode.HALF_UP),
+                bet.getOdds().setScale(4, RoundingMode.HALF_UP),
+                bet.getPotentialPayout().setScale(2, RoundingMode.HALF_UP),
                 bet.getResolveAt(),
-                bet.getPriceAtResolution() != null ? bet.getPriceAtResolution().setScale(2) : null,
+                bet.getPriceAtResolution() != null ? bet.getPriceAtResolution().setScale(2, RoundingMode.HALF_UP) : null,
                 bet.getResolvedAt(),
                 bet.getStatus().name()
         );

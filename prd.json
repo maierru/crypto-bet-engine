@@ -46,7 +46,7 @@
     {
       "id": "US-009",
       "title": "Bet Status and History API",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-010",

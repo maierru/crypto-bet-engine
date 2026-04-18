@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -65,5 +68,16 @@ public class BetService {
         var bet = betRepository.findById(id)
                 .orElseThrow(() -> new BetNotFoundException(id));
         return BetResponse.from(bet);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BetResponse> getBetsForWallet(UUID walletId, BetStatus status, Pageable pageable) {
+        Page<Bet> bets;
+        if (status != null) {
+            bets = betRepository.findByWalletIdAndStatusOrderByCreatedAtDesc(walletId, status, pageable);
+        } else {
+            bets = betRepository.findByWalletIdOrderByCreatedAtDesc(walletId, pageable);
+        }
+        return bets.map(BetResponse::from);
     }
 }
