@@ -245,3 +245,24 @@
   - Wallet-scoped endpoints go on WalletController to keep URL structure clean (/api/wallets/{id}/bets)
   - BetService handles both filtered and unfiltered queries via null-check on status param
 ---
+
+## 2026-04-18 - US-010
+- WebSocket bet updates: real-time push notifications on bet placement and settlement
+- BetUpdateEvent record: betId, walletId, status, payout
+- BetWebSocketHandler: listens for BetUpdateEvent, pushes JSON to `/topic/bets/{walletId}`
+- Payload format: `{"type":"bet_update","betId":"...","status":"WON","payout":"185.00"}`
+- SettlementService publishes BetUpdateEvent after each settlement (WON/LOST/PUSH)
+- BetService publishes BetUpdateEvent with OPEN status after bet placement
+- TDD: 4 tests (receive update for wallet, settlement push with status/payout, no updates for other wallets, all status types)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/websocket/BetUpdateEvent.java (new)
+  - src/main/java/com/cryptobet/engine/websocket/BetWebSocketHandler.java (new)
+  - src/main/java/com/cryptobet/engine/settlement/SettlementService.java (added event publishing)
+  - src/main/java/com/cryptobet/engine/bet/BetService.java (added event publishing)
+  - src/test/java/com/cryptobet/engine/websocket/BetWebSocketTest.java (new)
+- **Learnings for future iterations:**
+  - BetWebSocketHandler follows same pattern as PriceWebSocketHandler — Spring event + STOMP broadcast
+  - Wallet-scoped topics (`/topic/bets/{walletId}`) ensure clients only get their own updates
+  - BetUpdateEvent uses a public `publishBetUpdate()` method for both @EventListener and direct test invocation
+  - SettlementService computes payout amount (potentialPayout for WON, stake for PUSH, zero for LOST) before publishing event
+---

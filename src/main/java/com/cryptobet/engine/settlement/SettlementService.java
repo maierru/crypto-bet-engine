@@ -4,8 +4,10 @@ import com.cryptobet.engine.bet.*;
 import com.cryptobet.engine.exposure.ExposureService;
 import com.cryptobet.engine.price.PriceService;
 import com.cryptobet.engine.wallet.WalletRepository;
+import com.cryptobet.engine.websocket.BetUpdateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +23,16 @@ public class SettlementService {
     private final WalletRepository walletRepository;
     private final PriceService priceService;
     private final ExposureService exposureService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SettlementService(BetRepository betRepository, WalletRepository walletRepository,
-                             PriceService priceService, ExposureService exposureService) {
+                             PriceService priceService, ExposureService exposureService,
+                             ApplicationEventPublisher eventPublisher) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
         this.priceService = priceService;
         this.exposureService = exposureService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -62,6 +67,15 @@ public class SettlementService {
 
         betRepository.save(bet);
         exposureService.removeExposure(bet.getSymbol(), bet.getPotentialPayout());
+
+        BigDecimal payout = switch (outcome) {
+            case WON -> bet.getPotentialPayout();
+            case PUSH -> bet.getStake();
+            case LOST -> BigDecimal.ZERO;
+            default -> BigDecimal.ZERO;
+        };
+        eventPublisher.publishEvent(new BetUpdateEvent(bet.getId(), bet.getWalletId(), outcome, payout));
+
         return true;
     }
 

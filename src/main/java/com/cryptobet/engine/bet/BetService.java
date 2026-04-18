@@ -6,6 +6,8 @@ import com.cryptobet.engine.exposure.ExposureService;
 import com.cryptobet.engine.odds.OddsService;
 import com.cryptobet.engine.wallet.WalletNotFoundException;
 import com.cryptobet.engine.wallet.WalletRepository;
+import com.cryptobet.engine.websocket.BetUpdateEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +27,18 @@ public class BetService {
     private final WalletRepository walletRepository;
     private final OddsService oddsService;
     private final ExposureService exposureService;
+    private final ApplicationEventPublisher eventPublisher;
     private final int defaultDurationSeconds;
 
     public BetService(BetRepository betRepository, WalletRepository walletRepository,
                       OddsService oddsService, ExposureService exposureService,
+                      ApplicationEventPublisher eventPublisher,
                       @Value("${betting.default-duration-seconds:60}") int defaultDurationSeconds) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
         this.oddsService = oddsService;
         this.exposureService = exposureService;
+        this.eventPublisher = eventPublisher;
         this.defaultDurationSeconds = defaultDurationSeconds;
     }
 
@@ -59,6 +64,9 @@ public class BetService {
         bet = betRepository.save(bet);
 
         exposureService.addExposure(bet.getSymbol(), bet.getPotentialPayout());
+
+        eventPublisher.publishEvent(new BetUpdateEvent(
+                bet.getId(), bet.getWalletId(), BetStatus.OPEN, BigDecimal.ZERO));
 
         return BetResponse.from(bet);
     }

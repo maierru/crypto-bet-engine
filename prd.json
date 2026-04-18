@@ -51,7 +51,7 @@
     {
       "id": "US-010",
       "title": "WebSocket Bet Updates",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-011",
