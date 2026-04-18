@@ -2,6 +2,7 @@ package com.cryptobet.engine.bet;
 
 import com.cryptobet.engine.bet.dto.BetResponse;
 import com.cryptobet.engine.bet.dto.PlaceBetRequest;
+import com.cryptobet.engine.exposure.ExposureService;
 import com.cryptobet.engine.odds.OddsService;
 import com.cryptobet.engine.wallet.WalletNotFoundException;
 import com.cryptobet.engine.wallet.WalletRepository;
@@ -17,11 +18,14 @@ public class BetService {
     private final BetRepository betRepository;
     private final WalletRepository walletRepository;
     private final OddsService oddsService;
+    private final ExposureService exposureService;
 
-    public BetService(BetRepository betRepository, WalletRepository walletRepository, OddsService oddsService) {
+    public BetService(BetRepository betRepository, WalletRepository walletRepository,
+                      OddsService oddsService, ExposureService exposureService) {
         this.betRepository = betRepository;
         this.walletRepository = walletRepository;
         this.oddsService = oddsService;
+        this.exposureService = exposureService;
     }
 
     @Transactional
@@ -42,6 +46,8 @@ public class BetService {
         bet.setOdds(oddsService.calculateOdds());
         bet.setPotentialPayout(oddsService.calculatePotentialPayout(request.stake()));
         bet = betRepository.save(bet);
+
+        exposureService.addExposure(bet.getSymbol(), bet.getPotentialPayout());
 
         return BetResponse.from(bet);
     }

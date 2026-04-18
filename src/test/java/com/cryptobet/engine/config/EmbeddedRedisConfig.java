@@ -5,7 +5,6 @@ import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import redis.embedded.RedisServer;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -17,20 +16,22 @@ public class EmbeddedRedisConfig {
     @Value("${spring.data.redis.port}")
     private int redisPort;
 
-    private RedisServer redisServer;
+    private Process redisProcess;
 
     @PostConstruct
     public void start() throws IOException {
         if (isPortAvailable(redisPort)) {
-            redisServer = new RedisServer(redisPort);
-            redisServer.start();
+            redisProcess = new ProcessBuilder("redis-server", "--port", String.valueOf(redisPort), "--save", "", "--appendonly", "no")
+                    .redirectErrorStream(true)
+                    .start();
+            waitForRedisReady();
         }
     }
 
     @PreDestroy
-    public void stop() throws IOException {
-        if (redisServer != null && redisServer.isActive()) {
-            redisServer.stop();
+    public void stop() {
+        if (redisProcess != null && redisProcess.isAlive()) {
+            redisProcess.destroyForcibly();
         }
     }
 
@@ -39,6 +40,20 @@ public class EmbeddedRedisConfig {
             return true;
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    private void waitForRedisReady() {
+        for (int i = 0; i < 50; i++) {
+            if (!isPortAvailable(redisPort)) {
+                return;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 }

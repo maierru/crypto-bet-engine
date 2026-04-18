@@ -26,7 +26,7 @@
     {
       "id": "US-005",
       "title": "Exposure Tracking via Redis",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-006",

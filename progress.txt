@@ -1,6 +1,7 @@
 ## Codebase Patterns
 - Spring Boot 3.4.4 with Java 21, Gradle Kotlin DSL
-- Tests use H2 (PostgreSQL mode) + embedded Redis on port 16379
+- Tests use H2 (PostgreSQL mode) + local redis-server process on port 16379
+- EmbeddedRedisConfig starts `redis-server` via ProcessBuilder (embedded-redis lib doesn't work on ARM Mac)
 - Test profile: `@ActiveProfiles("test")`, config in `application-test.yml`
 - Flyway disabled in tests, using `ddl-auto: create-drop` with H2
 - All monetary values: `BigDecimal` in Java, `DECIMAL(19,4)` in PostgreSQL
@@ -12,6 +13,8 @@
 - Feature packages: `com.cryptobet.engine.<feature>` with `dto` sub-package for request/response records
 - Configurable properties use `@Value("${betting.prop-name:default}")` pattern
 - OddsService is injectable — use it wherever odds/payout calculation is needed
+- Redis exposure keys: `exposure:{symbol}` — use ExposureService for all exposure mutations
+- ExposureService uses `StringRedisTemplate` with get/set (not INCRBYFLOAT) for BigDecimal precision
 
 ---
 
@@ -95,4 +98,27 @@
   - Binary bet odds are symmetric — both UP and DOWN get same odds
   - OddsService uses constructor injection with @Value for config — allows unit testing with custom vig rates
   - BigDecimal SCALE=4 for odds to preserve precision through calculations
+---
+
+## 2026-04-18 - US-005
+- ExposureService: tracks platform exposure per symbol in Redis
+- Redis key pattern: `exposure:{symbol}` storing total potential payout as string
+- addExposure/removeExposure/getExposure methods with BigDecimal precision
+- ExposureController: GET /api/exposure/{symbol} returns current exposure
+- BetService.placeBet() now calls exposureService.addExposure() after saving bet
+- Fixed EmbeddedRedisConfig: replaced embedded-redis lib with ProcessBuilder starting local redis-server (ARM Mac compatibility)
+- TDD: 6 unit tests (ExposureServiceTest) + 3 integration tests (ExposureControllerTest)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/exposure/ExposureService.java (new)
+  - src/main/java/com/cryptobet/engine/exposure/ExposureController.java (new)
+  - src/main/java/com/cryptobet/engine/exposure/dto/ExposureResponse.java (new)
+  - src/main/java/com/cryptobet/engine/bet/BetService.java (inject ExposureService, add exposure on bet placement)
+  - src/test/java/com/cryptobet/engine/config/EmbeddedRedisConfig.java (rewritten for ARM Mac)
+  - src/test/java/com/cryptobet/engine/exposure/ExposureServiceTest.java (new)
+  - src/test/java/com/cryptobet/engine/exposure/ExposureControllerTest.java (new)
+- **Learnings for future iterations:**
+  - embedded-redis lib (codemonstur) does NOT work on ARM Mac — use ProcessBuilder with local redis-server binary instead
+  - StringRedisTemplate + get/set is better than INCRBYFLOAT for BigDecimal precision
+  - ExposureService.removeExposure() clamps to zero to prevent negative exposure
+  - Exposure is tracked per symbol (not per direction) — represents total platform liability
 ---
