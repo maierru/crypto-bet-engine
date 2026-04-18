@@ -1,27 +1,87 @@
 # Ralph Progress Log
-Started: Sat Apr 18 01:50:57 WEST 2026
----
+Started: Sat Apr 18 10:21:10 WEST 2026
 
 ## Codebase Patterns
-- Wallet entity uses `@PrePersist`/`@PreUpdate` for timestamps — no need to set manually
-- DTOs are Java records; adding fields requires updating all constructor calls in tests
-- WalletResponse uses `@JsonInclude(NON_NULL)` for optional fields — null fields are omitted from JSON
-- Flyway migrations are in `src/main/resources/db/migration/` with `V<n>__` naming
-- Tests use `@SpringBootTest` + `@AutoConfigureMockMvc` + `@ActiveProfiles("test")` with H2 in-memory DB
-- WalletService accepts primitives (not DTOs) — controller unwraps request records before calling service
+- E2E tests use Ferrum (Ruby CDP) + Minitest, located in test/e2e/
+- test_helper.rb provides E2EHelpers module — include it and get setup/teardown + all wait/action helpers
+- Browser is headless by default, set HEADLESS=false to watch visually
+- APP_URL env var overrides base URL (default http://localhost:8080)
+- Screenshots auto-saved to test/e2e/screenshots/ on test failure
+- application-e2e.yml sets bet duration to 10s for faster settlement tests
+- Use `fill_input` helper for text inputs (clears then types), `select_option` for dropdowns (sets value + dispatches change)
+- On Linux, Ferrum auto-adds no-sandbox browser option
+- To test JS validation, remove HTML5 validation attrs (minlength, min, required) via browser.evaluate() first
+- renderPriceCard in app.js clears only .skeleton elements (not all grid children) when first real price arrives
+- App needs Docker rebuild to pick up static file changes (no volume mount)
+- Ferrum native `.click` may fail on buttons below the fold or behind overlays — use `@browser.evaluate("document.querySelector('selector').click()")` for reliable JS clicks
+- "Settling..." text in countdown is very transient (~1s) — wait for either "Settling" OR "No active bets" to avoid timing misses
+- Bet outcome is non-deterministic with real market data — don't assert specific WIN/LOSS; verify settlement completed (no active bets) instead
+- e2e profile must be active for 10s bet duration; without it, default is 60s — use docker-compose override to set SPRING_PROFILES_ACTIVE=prod,e2e
+---
 
-## 2026-04-18 - US-F01
-- Added nickname field to wallet backend (nullable VARCHAR(50))
-- Files changed:
-  - `src/main/resources/db/migration/V5__add_nickname_to_wallets.sql` (new)
-  - `src/main/java/com/cryptobet/engine/wallet/Wallet.java` (field, getter, constructor)
-  - `src/main/java/com/cryptobet/engine/wallet/dto/CreateWalletRequest.java` (added nickname param)
-  - `src/main/java/com/cryptobet/engine/wallet/dto/WalletResponse.java` (added nickname + @JsonInclude)
-  - `src/main/java/com/cryptobet/engine/wallet/WalletService.java` (pass nickname through)
-  - `src/main/java/com/cryptobet/engine/wallet/WalletController.java` (pass nickname through)
-  - `src/test/java/com/cryptobet/engine/wallet/WalletControllerTest.java` (2 new tests + updated constructors)
+## 2026-04-18 - US-E01
+- Implemented E2E test scaffolding and infrastructure
+- Files created:
+  - test/e2e/Gemfile (ferrum ~> 0.17, minitest ~> 5.0)
+  - test/e2e/Gemfile.lock
+  - test/e2e/test_helper.rb (E2EHelpers module with all wait/action helpers)
+  - test/e2e/test_smoke.rb (smoke test: page loads, h1 title check)
+  - test/e2e/.gitignore (ignore screenshot PNGs)
+  - test/e2e/screenshots/.gitkeep
+  - src/main/resources/application-e2e.yml (betting.default-duration-seconds: 10)
 - **Learnings for future iterations:**
-  - CreateWalletRequest is a record — adding a field changes the canonical constructor, requiring all test usages to be updated
-  - Used `@JsonInclude(NON_NULL)` on nickname in WalletResponse so null nicknames are omitted from JSON (not sent as `"nickname": null`)
-  - Kept nickname optional (no @NotNull) for backwards compatibility
+  - Ferrum uses browser.quit (not close) for cleanup
+  - wait_for polls at 200ms intervals — keep timeouts reasonable
+  - fill_input clears via JS `this.value = ''` then uses el.type() for realistic input
+  - select_option dispatches change event after setting value — required for app.js to react
+  - To test JS validation, remove HTML5 attributes (minlength, required, min) via evaluate() first
+---
+
+## 2026-04-18 - US-E02
+- Implemented wallet creation E2E test with 3 test cases:
+  - Happy path: create wallet, verify modal hides, header shows name + balance, wallet-details contains name
+  - Validation: short nickname (< 2 chars) shows error in #wallet-form-error
+  - Validation: zero balance shows error in #wallet-form-error
+- Files created: test/e2e/test_wallet_creation.rb
+- **Learnings for future iterations:**
+  - HTML5 form validation (minlength, min, required) can block JS validation — use evaluate() to remove these attributes when testing JS-side validation
+  - Wallet modal starts with style.display = 'none' but is shown via showWalletModal() on page load when no stored wallet exists
+  - fill_input is a private method in E2EHelpers but accessible from test classes via include
+---
+
+## 2026-04-18 - US-E03
+- Implemented live price display E2E test
+- Files created: test/e2e/test_live_prices.rb
+- Files modified: src/main/resources/static/js/app.js (fixed bug where renderPriceCard cleared all grid children instead of just skeletons)
+- **Learnings for future iterations:**
+  - renderPriceCard had a bug: `grid.innerHTML = ''` wiped all existing price cards when a new symbol appeared — fixed to only remove `.skeleton` elements
+  - Both BTCUSDT and ETHUSDT are configured via `binance.symbols` in application.yml
+  - Docker rebuild required for static JS changes — no volume mount in docker-compose.yml
+  - Binance price feed timing varies — both symbols usually arrive within a few seconds but order is non-deterministic
+---
+
+## 2026-04-18 - US-E04
+- Implemented bet placement E2E test covering full flow:
+  - Verify submit disabled initially, select symbol, click direction, check odds, enter amount, check payout
+  - Submit bet, verify confirm modal with details (symbol, direction, stake)
+  - Confirm bet, verify toast + active bet appears
+- Updated `place_bet` helper in test_helper.rb to use JS clicks (Ferrum native click unreliable for below-fold buttons)
+- Files created: test/e2e/test_bet_placement.rb
+- Files modified: test/e2e/test_helper.rb
+- **Learnings for future iterations:**
+  - Ferrum `.click` may not work on buttons below the viewport fold — use `@browser.evaluate("document.querySelector('selector').click()")` instead
+  - The bet form uses closure variables (`selectedDirection`, `currentOdds`) — direction button click sets them via event listener
+  - Odds are fetched from `/api/odds?symbol=X&direction=Y` — need to wait for this API response before proceeding
+  - `validateBetForm()` runs on input events — small sleep after fill_input helps ensure button state updates
+---
+
+## 2026-04-18 - US-E05
+- Implemented bet settlement E2E test
+- Files created: test/e2e/test_bet_settlement.rb
+- Test verifies: wallet creation → bet placement → active bet appears → settling/settled → "No active bets" → balance is valid
+- **Learnings for future iterations:**
+  - "Settling..." countdown text is extremely transient (~1s before poll clears bets) — use `wait_for_settling_or_settled` that checks for either "Settling" or "No active bets"
+  - Bet outcome (WIN/LOSS/PUSH) is non-deterministic with real market data — avoid asserting specific balance change direction
+  - Recording initial_balance before vs after bet placement matters: pre-bet can equal final on PUSH (stake returned exactly); post-bet stays same on LOSS
+  - The e2e Spring profile must be active for 10s bet duration; verify via docker logs (actuator/env may not show profiles)
 ---

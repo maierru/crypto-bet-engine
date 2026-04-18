@@ -1,276 +1,194 @@
 {
-  "project": "crypto-bet-engine-frontend",
-  "branchName": "ralph/crypto-bet-frontend",
-  "description": "Browser-based frontend for the Crypto Bet Engine. Vanilla HTML/CSS/JS, dark trading theme, real-time WebSocket prices, bet placement with odds/exposure info, bet history. Served as static files from Spring Boot.",
+  "project": "crypto-bet-engine-e2e",
+  "branchName": "ralph/e2e-testing",
+  "description": "E2E browser integration tests using Ferrum (Ruby + CDP). Tests verify full user flows: wallet creation, live WebSocket prices, bet placement, settlement, history. No npm, no chromedriver.",
   "userStories": [
     {
-      "id": "US-F01",
-      "title": "Add nickname field to wallet backend",
-      "description": "As a frontend developer, I need the wallet API to accept and return a nickname so users can identify their wallets.",
+      "id": "US-E01",
+      "title": "E2E test scaffolding and infrastructure",
+      "description": "As a developer, I need the test infrastructure set up so I can write E2E tests.",
       "acceptanceCriteria": [
-        "Add Flyway migration V5: ALTER TABLE wallets ADD COLUMN nickname VARCHAR(50)",
-        "Add nickname field to Wallet entity (nullable String)",
-        "Update CreateWalletRequest to accept optional nickname field",
-        "Update WalletResponse to include nickname",
-        "POST /api/wallets with {\"initialBalance\": 100, \"nickname\": \"Player1\"} stores and returns nickname",
-        "Existing wallets without nickname return null for nickname field",
-        "Existing tests still pass",
-        "./gradlew test passes"
+        "Create test/e2e/Gemfile with ferrum ~> 0.17 and minitest ~> 5.0 gems",
+        "Create test/e2e/test_helper.rb with Ferrum browser setup/teardown (use browser.quit not close)",
+        "test_helper.rb includes wait_for(selector, timeout) that polls DOM and raises on timeout",
+        "test_helper.rb includes wait_for_visible(selector, timeout) that checks element is not display:none",
+        "test_helper.rb includes wait_for_hidden(selector, timeout) that checks element is hidden or removed",
+        "test_helper.rb includes wait_for_text(selector, text, timeout) that polls for text content",
+        "test_helper.rb includes wait_for_text_match(selector, pattern, timeout) for regex matching",
+        "test_helper.rb includes wait_for_class(selector, css_class, timeout) for CSS class presence",
+        "Browser headless by default, HEADLESS=false env var to watch visually",
+        "Base URL defaults to http://localhost:8080, configurable via APP_URL env var",
+        "Screenshots saved to test/e2e/screenshots/ on test failure",
+        "Helper methods: create_wallet(nickname, balance), wait_for_ws_connection, wait_for_prices, place_bet(symbol, direction, amount)",
+        "create_wallet fills #wallet-nickname and #wallet-initial-balance, clicks submit, waits for #wallet-modal to hide",
+        "wait_for_ws_connection waits for #conn-status to have class conn-status--connected",
+        "wait_for_prices waits for #price-card-BTCUSDT to appear",
+        "place_bet selects symbol from #bet-symbol, clicks direction button, enters amount in #bet-amount, clicks #bet-submit-btn, confirms via #bet-confirm-btn",
+        "Create src/main/resources/application-e2e.yml with betting.default-duration-seconds: 10",
+        "bundle install in test/e2e/ succeeds",
+        "A smoke test: page loads, h1.header__title text is 'Crypto Bet Engine'",
+        "On Linux (CI), Ferrum browser options include 'no-sandbox': nil",
+        "Tests pass"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "Backend change needed before frontend can use nicknames. Keep nickname optional for backwards compat."
+      "notes": "Large story but all pieces depend on each other — can't split. This is pure setup, no app code changes except application-e2e.yml."
     },
     {
-      "id": "US-F02",
-      "title": "Enable SockJS fallback on WebSocket endpoint",
-      "description": "As a frontend developer, I need SockJS support so the browser can connect reliably to STOMP.",
+      "id": "US-E02",
+      "title": "Wallet creation E2E test",
+      "description": "As a developer, I want to verify that wallet creation works end-to-end in the browser.",
       "acceptanceCriteria": [
-        "Update WebSocketConfig: add .withSockJS() to the /ws endpoint registration",
-        "Add sockjs dependency if needed (spring-boot-starter-websocket should include it)",
-        "Existing WebSocket tests still pass",
-        "./gradlew test passes"
+        "Test opens APP_URL in fresh browser (no localStorage)",
+        "Verifies #wallet-modal is visible (style.display is not 'none')",
+        "Fills #wallet-nickname with 'TestBot' and #wallet-initial-balance with '1000'",
+        "Clicks #create-wallet-form button[type='submit']",
+        "Verifies #wallet-modal hides (style.display becomes 'none')",
+        "Verifies #wallet-name text is 'TestBot'",
+        "Verifies #wallet-balance text is '$1000.00'",
+        "Verifies #wallet-details contains 'TestBot'",
+        "Validation test: submit with nickname less than 2 chars — #wallet-form-error shows error or HTML5 validation prevents submit",
+        "Validation test: submit with balance '0' — #wallet-form-error shows error",
+        "Tests pass"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Browsers need SockJS fallback for reliable STOMP. Quick config change."
+      "passes": true,
+      "notes": "Each test uses fresh browser context. Balance format is $1000.00 (no comma separator)."
     },
     {
-      "id": "US-F03",
-      "title": "App shell — HTML structure and dark theme CSS",
-      "description": "As a user, I want a polished dark-themed layout so the app feels like a real trading platform.",
+      "id": "US-E03",
+      "title": "Live price display E2E test",
+      "description": "As a developer, I want to verify that WebSocket prices appear in the browser.",
       "acceptanceCriteria": [
-        "Create src/main/resources/static/index.html with semantic HTML structure",
-        "Create src/main/resources/static/css/style.css with dark theme",
-        "Dark palette: #0f0f1a (body bg), #1a1a2e (cards), #16213e (accents), #e0e0e0 (text)",
-        "Green #00e676 for UP/WON, Red #ff1744 for DOWN/LOST, Yellow #ffd600 for PUSH",
-        "CSS custom properties for all theme colors",
-        "Header bar with app name 'CryptoBet' and wallet indicator placeholder",
-        "Navigation: Dashboard and Bet History tabs/links",
-        "Main content area with placeholder sections: price ticker, bet panel, active bets",
-        "Responsive: sidebar + main on desktop (>768px), stacked on mobile",
-        "Google Fonts: JetBrains Mono for numbers, system font stack for UI text",
-        "Loading index.html in browser shows styled dark layout",
-        "Verify in browser using dev-browser skill"
+        "Test creates wallet via create_wallet helper",
+        "Waits for #conn-status to have class conn-status--connected (timeout 15s)",
+        "Waits for #price-card-BTCUSDT to appear (timeout 15s)",
+        "Waits for #price-card-ETHUSDT to appear (timeout 15s)",
+        "Verifies #price-BTCUSDT text matches /\\$[\\d,.]+/ (non-zero price)",
+        "Verifies #price-ETHUSDT text matches /\\$[\\d,.]+/ (non-zero price)",
+        "Tests pass"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Static files only. No JS yet. Create the visual foundation."
+      "passes": true,
+      "notes": "Binance feed may take a few seconds to start sending prices. Use 15s timeout."
     },
     {
-      "id": "US-F04",
-      "title": "JavaScript foundation — API client and app initialization",
-      "description": "As a developer, I need the JS structure with fetch wrapper and app state management.",
+      "id": "US-E04",
+      "title": "Bet placement E2E test",
+      "description": "As a developer, I want to verify the bet placement flow works in the browser.",
       "acceptanceCriteria": [
-        "Create src/main/resources/static/js/app.js",
-        "App state object: { walletId, nickname, balance, prices: {}, bets: [] }",
-        "API helper: api.get(path), api.post(path, body) wrapping fetch() with error handling",
-        "API helper returns parsed JSON on success, throws with error message on failure",
-        "Toast notification system: showToast(message, type) where type is success/error/warning",
-        "Toast appears top-right, auto-dismisses after 5 seconds, stackable",
-        "CSS for toast notifications in style.css",
-        "View router: showView(name) toggles visibility of dashboard vs history sections",
-        "Navigation links switch views without page reload",
-        "Verify in browser using dev-browser skill"
+        "Test creates wallet and waits for prices via helpers",
+        "Verifies #bet-submit-btn is disabled initially",
+        "Selects 'BTCUSDT' from #bet-symbol dropdown",
+        "Clicks .bet-dir-btn[data-dir='UP']",
+        "Verifies #bet-odds text matches /\\d+\\.\\d+/ (numeric odds)",
+        "Verifies #bet-info is visible (not display:none)",
+        "Enters '100' in #bet-amount",
+        "Verifies #bet-payout text matches /\\$\\d+/ (estimated payout)",
+        "Verifies #bet-submit-btn is no longer disabled",
+        "Clicks #bet-submit-btn",
+        "Verifies #bet-confirm-modal becomes visible",
+        "Verifies #bet-confirm-details text contains 'BTCUSDT', 'UP', '$100.00'",
+        "Clicks #bet-confirm-btn",
+        "Verifies #bet-confirm-modal hides",
+        "Verifies .toast--success appears in #toast-container",
+        "Verifies .active-bet appears in #active-bets containing 'BTCUSDT'",
+        "Tests pass"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Foundation JS — no API calls yet, just structure."
+      "passes": true,
+      "notes": "Large story but each step depends on previous — cannot split without duplicating full setup."
     },
     {
-      "id": "US-F05",
-      "title": "Wallet creation modal",
-      "description": "As a new user, I want to create a wallet with a nickname so I can start using the platform.",
+      "id": "US-E05",
+      "title": "Bet settlement E2E test",
+      "description": "As a developer, I want to verify that bet settlement updates the UI correctly.",
       "acceptanceCriteria": [
-        "On page load, check localStorage for walletId",
-        "If no walletId, show modal overlay with create-wallet form",
-        "Form fields: nickname (text, required, min 2 chars), initial balance (number, required, > 0)",
-        "Submit calls POST /api/wallets with { nickname, initialBalance }",
-        "On success: store walletId and nickname in localStorage, close modal, initialize app",
-        "On error: show error message in modal",
-        "Modal cannot be dismissed without creating wallet",
-        "Client-side validation with inline error messages",
-        "Verify in browser using dev-browser skill"
+        "Test creates wallet, waits for prices, places bet via place_bet helper",
+        "Waits for .active-bet to appear in #active-bets",
+        "Records #wallet-balance text as initial_balance",
+        "Waits for .active-bet__countdown text to contain 'Settling' (timeout 25s — 10s bet duration with e2e profile + 15s buffer)",
+        "Waits for #active-bets text to contain 'No active bets' (timeout 20s — settlement polling at 3s intervals)",
+        "Verifies #wallet-balance text differs from initial_balance (balance changed after settlement)",
+        "Tests pass"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Depends on US-F01 (nickname backend) and US-F04 (API client)."
+      "passes": true,
+      "notes": "Depends on application-e2e.yml from US-E01 to shorten bet duration to 10s. Without it, test would take 90+ seconds."
     },
     {
-      "id": "US-F06",
-      "title": "Wallet dashboard — balance and deposit",
-      "description": "As a user, I want to see my wallet balance and deposit funds.",
+      "id": "US-E06",
+      "title": "Bet history E2E test",
+      "description": "As a developer, I want to verify the bet history view works after settlement.",
       "acceptanceCriteria": [
-        "On app init (after wallet exists), fetch GET /api/wallets/{id}",
-        "Display in header/sidebar: nickname, balance formatted as $X,XXX.XX, wallet ID (first 8 chars)",
-        "Deposit button opens inline form with amount input",
-        "Deposit calls POST /api/wallets/{id}/deposit with { amount }",
-        "Balance updates in UI after successful deposit, show success toast",
-        "Handle wallet-not-found: clear localStorage, show create-wallet modal",
-        "Verify in browser using dev-browser skill"
+        "Test creates wallet, places bet, waits for settlement (reuse helpers)",
+        "Clicks .sidebar__link[data-view='history'] to navigate to history view",
+        "Waits for .history-table to appear (timeout 5s)",
+        "Verifies .history-table tbody tr exists (at least 1 row)",
+        "Verifies row text contains bet symbol and direction",
+        "Verifies .history-table .badge exists with text matching /WON|LOST|PUSH/",
+        "Clicks .history-tab[data-filter='WON'] and waits briefly for filter",
+        "Tests pass"
       ],
       "priority": 6,
       "passes": false,
-      "notes": ""
+      "notes": "Settlement must complete before navigating to history. Total wait time ~30s for this test."
     },
     {
-      "id": "US-F07",
-      "title": "WebSocket connection and live price display",
-      "description": "As a user, I want to see real-time crypto prices updating live.",
+      "id": "US-E07",
+      "title": "Deposit E2E test",
+      "description": "As a developer, I want to verify the deposit flow works.",
       "acceptanceCriteria": [
-        "Load SockJS and STOMP.js from CDN (script tags in index.html)",
-        "Connect to STOMP over SockJS at /ws endpoint",
-        "Subscribe to /topic/prices for all price updates",
-        "Display price card for each symbol (BTCUSDT, ETHUSDT)",
-        "Each card shows: symbol name, current price formatted with commas, direction arrow",
-        "Price text flashes green on increase, red on decrease (CSS animation, 300ms)",
-        "Connection status indicator in header: green dot = connected, yellow = reconnecting, red = disconnected",
-        "Auto-reconnect on disconnect with 2s delay",
-        "Verify in browser using dev-browser skill"
+        "Test creates wallet with balance 1000 via create_wallet helper",
+        "Waits for #deposit-toggle-btn to appear (dynamically rendered in wallet card)",
+        "Clicks #deposit-toggle-btn",
+        "Verifies #deposit-section becomes visible",
+        "Enters '500' in #deposit-amount",
+        "Submits #deposit-form via button[type='submit'] click",
+        "Verifies .toast--success appears",
+        "Verifies #wallet-balance text is '$1500.00'",
+        "Tests pass"
       ],
       "priority": 7,
       "passes": false,
-      "notes": "First WebSocket story. Keep sparkline for next story to keep scope small."
+      "notes": "#deposit-toggle-btn is rendered by renderWalletCard() — must wait for wallet card to fully load before clicking."
     },
     {
-      "id": "US-F08",
-      "title": "Price sparkline charts",
-      "description": "As a user, I want to see a mini chart of recent price history for each symbol.",
+      "id": "US-E08",
+      "title": "E2E run script for local testing",
+      "description": "As a developer, I need a script to run E2E tests locally against Docker.",
       "acceptanceCriteria": [
-        "Add canvas element to each price card",
-        "Store last 50 price points per symbol in memory array",
-        "Draw sparkline on canvas: line chart, no axes, just the price curve",
-        "Line color: green if current > first point, red if lower, gray if equal",
-        "Canvas redraws on each new price update",
-        "Canvas size: ~200x60px on desktop, scales on mobile",
-        "Sparkline draws smoothly without flicker",
-        "Verify in browser using dev-browser skill"
+        "Create docker-compose.e2e.yml override that sets SPRING_PROFILES_ACTIVE=prod,e2e on app service",
+        "Create test/e2e/run.sh that starts docker-compose -f docker-compose.yml -f docker-compose.e2e.yml up --build -d",
+        "run.sh waits for app health via curl to /actuator/health (up to 60 retries, 2s apart)",
+        "run.sh runs: cd test/e2e && bundle exec ruby -e 'Dir.glob(\"test_*.rb\").each{|f| require \"./#{f}\"}'",
+        "run.sh traps EXIT to run docker compose down",
+        "run.sh exits with test exit code (0 = pass, non-zero = fail)",
+        "run.sh supports HEADLESS=false env var passthrough for visual debugging",
+        "chmod +x test/e2e/run.sh",
+        "Tests pass"
       ],
       "priority": 8,
       "passes": false,
-      "notes": "Canvas-based, no libraries. Keep it simple."
+      "notes": "Uses docker-compose.e2e.yml override to set e2e Spring profile without modifying the main docker-compose.yml."
     },
     {
-      "id": "US-F09",
-      "title": "Bet placement form with odds and exposure",
-      "description": "As a user, I want to place a bet and see odds, exposure, and estimated payout before confirming.",
+      "id": "US-E09",
+      "title": "GitHub Actions CI integration for E2E tests",
+      "description": "As a developer, I need E2E tests running automatically in GitHub Actions.",
       "acceptanceCriteria": [
-        "Bet panel with: symbol dropdown (BTCUSDT, ETHUSDT), direction toggle (UP/DOWN buttons), amount input",
-        "UP button styled green, DOWN button styled red, selected state highlighted",
-        "On symbol + direction selection, fetch GET /api/odds?symbol={s}&direction={d}",
-        "On symbol selection, fetch GET /api/exposure/{symbol}",
-        "Display: current odds, symbol exposure, estimated payout (amount * odds)",
-        "Estimated payout updates live as amount changes",
-        "Amount validation: min 1, cannot exceed wallet balance",
-        "Submit button disabled until all fields valid",
-        "Verify in browser using dev-browser skill"
+        "Add e2e-tests job to .github/workflows/ci.yml that runs after existing test/build job",
+        "Job uses ubuntu-latest runner",
+        "Installs google-chrome-stable via apt (NOT chromium-browser snap)",
+        "Installs Ruby 3.2+ via ruby/setup-ruby@v1 with bundler-cache: true",
+        "Runs test/e2e/run.sh",
+        "Uploads test/e2e/screenshots/ as artifact on failure (if: always(), actions/upload-artifact@v4)",
+        "Ferrum browser options include 'no-sandbox': nil on Linux (already handled in test_helper.rb)",
+        "Tests pass"
       ],
       "priority": 9,
       "passes": false,
-      "notes": "Form and info display only. Confirmation and API call in next story."
-    },
-    {
-      "id": "US-F10",
-      "title": "Bet placement confirmation and submission",
-      "description": "As a user, I want a confirmation step before my bet is placed.",
-      "acceptanceCriteria": [
-        "Click 'Place Bet' shows confirmation overlay/section with bet summary",
-        "Summary shows: symbol, direction, amount, odds, estimated payout",
-        "Confirm button calls POST /api/bets with { walletId, symbol, direction, amount }",
-        "On success: show success toast with bet ID, refresh wallet balance, clear form",
-        "On error: show error toast (insufficient balance, exposure limit, etc.)",
-        "Buttons disabled during API call to prevent double-submit",
-        "Cancel returns to form without changes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 10,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-F11",
-      "title": "Active bets display on dashboard",
-      "description": "As a user, I want to see my currently pending bets on the dashboard.",
-      "acceptanceCriteria": [
-        "Section below bet panel showing active/pending bets",
-        "Fetch from GET /api/wallets/{id}/bets?status=PENDING&page=0&size=10",
-        "Each bet shows: symbol, direction (colored), amount, placed time (relative), countdown to resolution",
-        "Countdown updates every second showing time remaining",
-        "Refresh list after placing a new bet",
-        "Empty state message: 'No active bets'",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 11,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-F12",
-      "title": "Live bet settlement notifications",
-      "description": "As a user, I want real-time notifications when my bets settle.",
-      "acceptanceCriteria": [
-        "Subscribe to /topic/bets/{walletId} via STOMP (reuse existing connection)",
-        "On bet_update event, show toast: green for WON (with payout), red for LOST, yellow for PUSH/VOID",
-        "Auto-refresh wallet balance after receiving settlement",
-        "Remove settled bet from active bets list",
-        "If on history view, refresh history data",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 12,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-F13",
-      "title": "Bet history view with filters and pagination",
-      "description": "As a user, I want to browse my past bets to review my performance.",
-      "acceptanceCriteria": [
-        "History view accessible via navigation tab",
-        "Fetch from GET /api/wallets/{id}/bets?page=0&size=20",
-        "Filter tabs: All, Won, Lost, Push, Void — each calls API with status param",
-        "Table/list: symbol, direction, amount, odds, payout, status badge, placed time, settled time",
-        "Status badges color-coded: green=WON, red=LOST, yellow=PUSH, gray=VOID",
-        "Pagination: Previous/Next buttons, 'Page X of Y' indicator",
-        "Active tab highlighted, filter persists when paginating",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 13,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-F14",
-      "title": "Wallet switching",
-      "description": "As a user, I want to switch between wallets or create a new one.",
-      "acceptanceCriteria": [
-        "Wallet section in header is clickable, opens dropdown menu",
-        "Dropdown shows: current nickname, wallet ID (truncated)",
-        "Option: 'Switch Wallet' — shows input for wallet ID, validates via GET /api/wallets/{id}",
-        "Option: 'Create New Wallet' — opens the create-wallet modal",
-        "On switch: update localStorage, reinitialize app (reload all data, resubscribe WebSocket)",
-        "Invalid wallet ID shows error in dropdown",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 14,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-F15",
-      "title": "Loading states and error handling polish",
-      "description": "As a user, I want clear feedback when things are loading or go wrong.",
-      "acceptanceCriteria": [
-        "Loading spinner shown during initial wallet fetch",
-        "Skeleton placeholder cards for price ticker while WebSocket connects",
-        "All buttons show loading state (spinner/disabled) during API calls",
-        "Network failure: banner at top 'Connection lost — retrying...' with retry countdown",
-        "API errors show user-friendly messages (not raw JSON)",
-        "Wallet not found on load: clear state, show create modal with explanation",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 15,
-      "passes": false,
-      "notes": "Polish pass. All core features should work before this story."
+      "notes": "Depends on US-E08 run script. Cannot test CI locally — verify by reading the YAML carefully and checking against GitHub Actions docs."
     }
   ]
 }
