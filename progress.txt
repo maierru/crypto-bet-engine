@@ -574,3 +574,14 @@
   - Network banner toggle via CSS class (not inline style) for clean separation
   - Loading spinner placed inside card body before API fetch, replaced by real content on success
 ---
+
+## 2026-04-18 - US-E07
+- Deposit E2E test: verifies deposit toggle, form visibility, amount entry, submit, toast, balance update
+- Test file: test/e2e/test_deposit.rb
+- Files changed:
+  - test/e2e/test_deposit.rb (new)
+- **Learnings for future iterations:**
+  - `#deposit-toggle-btn` is dynamically rendered by `renderWalletCard()` — must `wait_for` it before clicking
+  - Deposit form is in static HTML (`#deposit-section`) but hidden by default — toggle via deposit button
+  - Balance assertion uses exact string match `$1500.00` (1000 initial + 500 deposit)
+---

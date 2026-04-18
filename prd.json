@@ -1,82 +1,52 @@
 {
-  "projectName": "Crypto Bet Engine Frontend",
-  "branchName": "ralph/crypto-bet-frontend",
-  "description": "Browser-based frontend for the Crypto Bet Engine — vanilla HTML/CSS/JS, dark theme, real-time WebSocket",
+  "projectName": "E2E Integration Testing with Ferrum",
+  "branchName": "ralph/e2e-testing",
+  "description": "Browser-based E2E tests for Crypto Bet Engine frontend using Ferrum (Ruby) + Minitest",
   "stories": [
     {
-      "id": "US-F01",
-      "title": "Add Nickname Field to Wallet Backend",
+      "id": "US-E01",
+      "title": "E2E test scaffolding",
       "passes": true
     },
     {
-      "id": "US-F02",
-      "title": "Enable SockJS Fallback on WebSocket",
+      "id": "US-E02",
+      "title": "Wallet creation test",
       "passes": true
     },
     {
-      "id": "US-F03",
-      "title": "App Shell — HTML and Dark Theme CSS",
+      "id": "US-E03",
+      "title": "Live price display test",
       "passes": true
     },
     {
-      "id": "US-F04",
-      "title": "JavaScript Foundation — API Client and App Init",
+      "id": "US-E04",
+      "title": "Bet placement test",
       "passes": true
     },
     {
-      "id": "US-F05",
-      "title": "Wallet Creation Modal",
+      "id": "US-E05",
+      "title": "Bet settlement test",
       "passes": true
     },
     {
-      "id": "US-F06",
-      "title": "Wallet Dashboard — Balance and Deposit",
+      "id": "US-E06",
+      "title": "Bet history test",
       "passes": true
     },
     {
-      "id": "US-F07",
-      "title": "WebSocket Connection and Live Price Display",
+      "id": "US-E07",
+      "title": "Deposit test",
       "passes": true
     },
     {
-      "id": "US-F08",
-      "title": "Price Sparkline Charts",
-      "passes": true
+      "id": "US-E08",
+      "title": "Run script for local testing",
+      "passes": false
     },
     {
-      "id": "US-F09",
-      "title": "Bet Placement Form with Odds and Exposure",
-      "passes": true
-    },
-    {
-      "id": "US-F10",
-      "title": "Bet Placement Confirmation and Submission",
-      "passes": true
-    },
-    {
-      "id": "US-F11",
-      "title": "Active Bets Display on Dashboard",
-      "passes": true
-    },
-    {
-      "id": "US-F12",
-      "title": "Live Bet Settlement Notifications",
-      "passes": true
-    },
-    {
-      "id": "US-F13",
-      "title": "Bet History View with Filters and Pagination",
-      "passes": true
-    },
-    {
-      "id": "US-F14",
-      "title": "Wallet Switching",
-      "passes": true
-    },
-    {
-      "id": "US-F15",
-      "title": "Loading States and Error Handling Polish",
-      "passes": true
+      "id": "US-E09",
+      "title": "CI integration",
+      "passes": false
     }
   ]
 }
