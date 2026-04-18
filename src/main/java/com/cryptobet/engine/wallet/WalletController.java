@@ -6,6 +6,7 @@ import com.cryptobet.engine.bet.dto.BetResponse;
 import com.cryptobet.engine.wallet.dto.CreateWalletRequest;
 import com.cryptobet.engine.wallet.dto.DepositRequest;
 import com.cryptobet.engine.wallet.dto.WalletResponse;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class WalletController {
     }
 
     @PostMapping
-    public ResponseEntity<WalletResponse> createWallet(@RequestBody CreateWalletRequest request) {
+    public ResponseEntity<WalletResponse> createWallet(@Valid @RequestBody CreateWalletRequest request) {
         var response = walletService.createWallet(request.initialBalance());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -39,7 +40,7 @@ public class WalletController {
     }
 
     @PostMapping("/{id}/deposit")
-    public ResponseEntity<WalletResponse> deposit(@PathVariable UUID id, @RequestBody DepositRequest request) {
+    public ResponseEntity<WalletResponse> deposit(@PathVariable UUID id, @Valid @RequestBody DepositRequest request) {
         var response = walletService.deposit(id, request.amount());
         return ResponseEntity.ok(response);
     }
@@ -53,15 +54,5 @@ public class WalletController {
         BetStatus betStatus = status != null ? BetStatus.valueOf(status) : null;
         var bets = betService.getBetsForWallet(id, betStatus, PageRequest.of(page, size));
         return ResponseEntity.ok(bets);
-    }
-
-    @ExceptionHandler(WalletNotFoundException.class)
-    public ResponseEntity<Void> handleNotFound(WalletNotFoundException ex) {
-        return ResponseEntity.notFound().build();
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Void> handleBadRequest(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().build();
     }
 }

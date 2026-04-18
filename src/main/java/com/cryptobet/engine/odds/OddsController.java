@@ -24,9 +24,4 @@ public class OddsController {
         var response = new OddsResponse(symbol, dir.name(), odds, oddsService.getVigRate());
         return ResponseEntity.ok(response);
     }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Void> handleBadRequest(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().build();
-    }
 }

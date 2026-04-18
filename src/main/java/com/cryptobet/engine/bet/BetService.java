@@ -44,10 +44,6 @@ public class BetService {
 
     @Transactional
     public BetResponse placeBet(PlaceBetRequest request) {
-        if (request.stake().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Stake must be positive");
-        }
-
         var direction = BetDirection.valueOf(request.direction());
 
         var wallet = walletRepository.findByIdForUpdate(request.walletId())

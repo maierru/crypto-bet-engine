@@ -94,7 +94,7 @@ class BetControllerTest {
     }
 
     @Test
-    void placeBet_insufficientBalance_returns400() throws Exception {
+    void placeBet_insufficientBalance_returns409() throws Exception {
         String walletId = createWalletAndGetId(new BigDecimal("10.00"));
 
         var body = """
@@ -110,7 +110,8 @@ class BetControllerTest {
         mockMvc.perform(post("/api/bets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("INSUFFICIENT_BALANCE"));
     }
 
     @Test

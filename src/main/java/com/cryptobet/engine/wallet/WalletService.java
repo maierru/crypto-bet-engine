@@ -32,9 +32,6 @@ public class WalletService {
 
     @Transactional
     public WalletResponse deposit(UUID id, BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Deposit amount must be positive");
-        }
         var wallet = walletRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new WalletNotFoundException(id));
         wallet.deposit(amount);

@@ -1,5 +1,6 @@
 package com.cryptobet.engine.wallet;
 
+import com.cryptobet.engine.error.InsufficientBalanceException;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -55,7 +56,7 @@ public class Wallet {
 
     public void deductStake(BigDecimal stake) {
         if (this.balance.compareTo(stake) < 0) {
-            throw new IllegalArgumentException("Insufficient balance");
+            throw new InsufficientBalanceException(this.id, stake, this.balance);
         }
         this.balance = this.balance.subtract(stake);
     }
