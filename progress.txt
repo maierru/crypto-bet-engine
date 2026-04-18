@@ -52,6 +52,13 @@
 - Frontend: `window.CryptoBet` exposes `wsConnect`, `wsDisconnect`, `wsSubscribe`, `wsUnsubscribe` for cross-module use
 - Frontend: connection status dot in header — green (connected), yellow pulsing (connecting), red (disconnected)
 - Frontend: deposit form is inline in wallet card, toggled by Deposit button rendered in `renderWalletCard()`
+- Frontend: price ticker subscribes in `onConnect` callback — auto-resubscribes on reconnect
+- Frontend: sparkline uses HiDPI canvas (2x scale) with `getComputedStyle` for CSS custom properties
+- Frontend: bet form uses confirmation modal pattern — `pendingBet` stores params between clicks
+- Frontend: active bets use `setInterval` countdown — always `clearInterval` before starting new one
+- Frontend: bet history loads on view switch via overridden `switchView()` function
+- Frontend: wallet dropdown uses `e.stopPropagation()` + document click listener for close-on-outside-click
+- Frontend: network banner shown on WS disconnect, hidden on reconnect — CSS class toggle
 
 ---
 
@@ -550,4 +557,20 @@
   - `wsDisconnect()` before `wsConnect()` on wallet switch to clean up old subscriptions
   - `e.stopPropagation()` on dropdown click prevents document click handler from closing it
   - Dropdown positioned absolute relative to header — uses fixed z-index above content
+---
+
+## 2026-04-18 - US-F15
+- Loading states: spinner on wallet card during fetch, skeleton placeholders for price cards
+- Network banner: "Connection lost — retrying..." shown on WS disconnect, hidden on reconnect
+- CSS: spinner animation, skeleton pulse animation, network banner styles
+- All interactive elements already have disabled state during API calls from prior stories
+- Files changed:
+  - src/main/resources/static/index.html (network banner, skeleton price placeholders)
+  - src/main/resources/static/css/style.css (spinner, skeleton, network banner styles)
+  - src/main/resources/static/js/app.js (loading states, network banner show/hide)
+  - prd.json (US-F15 passes: true)
+- **Learnings for future iterations:**
+  - Skeleton animation uses CSS `linear-gradient` with `background-position` animation for shimmer effect
+  - Network banner toggle via CSS class (not inline style) for clean separation
+  - Loading spinner placed inside card body before API fetch, replaced by real content on success
 ---

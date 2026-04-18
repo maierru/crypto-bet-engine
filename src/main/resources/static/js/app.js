@@ -169,6 +169,9 @@
     var stored = getStoredWallet();
     if (!stored) return;
 
+    var container = document.getElementById('wallet-details');
+    container.innerHTML = '<div class="loading-text"><span class="spinner"></span> Loading wallet...</div>';
+
     api('GET', '/api/wallets/' + stored.id)
       .then(function (wallet) {
         updateWalletIndicator(wallet.nickname || stored.nickname, wallet.balance);
@@ -303,6 +306,7 @@
       reconnectDelay: 5000,
       onConnect: function () {
         setConnStatus('connected');
+        hideNetworkBanner();
         // Re-subscribe all registered subscriptions
         Object.keys(wsSubscriptions).forEach(function (topic) {
           var cb = wsSubscriptions[topic].callback;
@@ -316,9 +320,11 @@
       },
       onStompError: function () {
         setConnStatus('disconnected');
+        showNetworkBanner();
       },
       onWebSocketClose: function () {
         setConnStatus('disconnected');
+        showNetworkBanner();
       }
     });
 
@@ -901,6 +907,18 @@
         switchWalletBtn.disabled = false;
       });
   });
+
+  // --- Network Banner ---
+
+  var networkBanner = document.getElementById('network-banner');
+
+  function showNetworkBanner() {
+    networkBanner.classList.add('network-banner--visible');
+  }
+
+  function hideNetworkBanner() {
+    networkBanner.classList.remove('network-banner--visible');
+  }
 
   // --- Utility ---
 

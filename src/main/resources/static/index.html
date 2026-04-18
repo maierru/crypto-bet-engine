@@ -36,6 +36,8 @@
     </div>
   </header>
 
+  <div class="network-banner" id="network-banner">Connection lost — retrying...</div>
+
   <div class="layout">
     <!-- Sidebar Navigation -->
     <nav class="sidebar" id="sidebar">
@@ -81,7 +83,10 @@
         <div class="card" id="price-card">
           <div class="card__header">Live Prices</div>
           <div class="card__body" id="price-ticker">
-            <p class="text--muted">Connecting to price feed...</p>
+            <div class="price-grid">
+              <div class="skeleton skeleton-price-card"></div>
+              <div class="skeleton skeleton-price-card"></div>
+            </div>
           </div>
         </div>
 

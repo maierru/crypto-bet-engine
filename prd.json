@@ -76,7 +76,7 @@
     {
       "id": "US-F15",
       "title": "Loading States and Error Handling Polish",
-      "passes": false
+      "passes": true
     }
   ]
 }
