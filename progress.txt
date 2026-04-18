@@ -441,3 +441,13 @@
   - `subscribeToPrices()` called inside `onConnect` to auto-resubscribe on reconnect
   - Price history stored per-symbol in `priceHistory` object, capped at 50 entries
 ---
+
+## 2026-04-18 - US-F08
+- Price Sparkline Charts: already implemented as part of US-F07
+- Canvas-based sparkline with 50 data points, HiDPI rendering, color-coded (green up, red down)
+- No additional code changes needed
+- Files changed:
+  - prd.json (US-F08 passes: true)
+- **Learnings for future iterations:**
+  - Sparkline was naturally part of the price display story — prd.json split it separately
+---

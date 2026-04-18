@@ -41,7 +41,7 @@
     {
       "id": "US-F08",
       "title": "Price Sparkline Charts",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F09",
