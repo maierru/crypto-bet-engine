@@ -432,5 +432,4 @@ Memory: 1 JVM × 500MB
 
 ## Open Questions
 
-
-3. Binance WS API — no auth needed for public price stream. Confirm no geo-blocking in Portugal.
+1. Binance WS API — no auth needed for public price stream. Confirm no geo-blocking in Portugal.
