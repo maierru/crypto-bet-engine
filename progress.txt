@@ -24,6 +24,12 @@
 - Bet entity has `resolveAt` (expiry), `priceAtResolution`, `resolvedAt` fields for settlement
 - BetStatus: OPEN, WON, LOST, PUSH, CANCELLED
 - PlaceBetRequest accepts optional `durationSeconds` (defaults to `betting.default-duration-seconds: 60`)
+- WebSocket: STOMP over `/ws` endpoint, topics `/topic/prices` (all) and `/topic/prices/{symbol}` (per-symbol)
+- PriceService publishes `PriceUpdateEvent` via Spring ApplicationEventPublisher on every price update
+- PriceWebSocketHandler listens for PriceUpdateEvent and broadcasts JSON to STOMP topics
+- Settlement scheduler disabled in tests via `settlement.scheduling-enabled: false` to avoid cross-context interference
+- Tests using `RANDOM_PORT` share H2 in-memory DB — disable background schedulers to prevent test pollution
+- Redis keys must be cleaned in `@BeforeEach` when tests assert on Redis state (not just DB)
 
 ---
 
@@ -189,4 +195,31 @@
   - Tests using findByIdForUpdate() need a transaction context — simpler to set wallet to post-deduction balance directly
   - H2 partial index syntax differs from PostgreSQL — but Flyway is disabled in tests so no issue
   - BetResponse uses @JsonInclude(NON_NULL) for optional settlement fields
+---
+
+## 2026-04-18 - US-008
+- WebSocket price push to clients via STOMP over `/ws` endpoint
+- WebSocketConfig: enables STOMP message broker with `/topic` prefix
+- PriceUpdateEvent: Spring application event published on every price update
+- PriceService modified to inject ApplicationEventPublisher and publish PriceUpdateEvent
+- PriceWebSocketHandler: listens for PriceUpdateEvent, broadcasts JSON to `/topic/prices` and `/topic/prices/{symbol}`
+- Fixed test pollution: settlement scheduler disabled in test profile, Redis keys cleaned in setUp
+- TDD: 5 tests (connect, receive update, multiple symbols, symbol-specific topic, timestamp in payload)
+- Files changed:
+  - src/main/java/com/cryptobet/engine/websocket/WebSocketConfig.java (new)
+  - src/main/java/com/cryptobet/engine/websocket/PriceWebSocketHandler.java (new)
+  - src/main/java/com/cryptobet/engine/price/PriceUpdateEvent.java (new)
+  - src/main/java/com/cryptobet/engine/price/PriceService.java (added event publishing)
+  - src/main/java/com/cryptobet/engine/settlement/SettlementScheduler.java (added scheduling-enabled flag)
+  - src/test/java/com/cryptobet/engine/websocket/PriceWebSocketTest.java (new)
+  - src/test/java/com/cryptobet/engine/price/PriceServiceTest.java (pass no-op event publisher)
+  - src/test/java/com/cryptobet/engine/price/BinancePriceFeedTest.java (pass no-op event publisher)
+  - src/test/java/com/cryptobet/engine/settlement/SettlementServiceTest.java (Redis cleanup in setUp)
+  - src/test/resources/application-test.yml (added settlement.scheduling-enabled: false)
+- **Learnings for future iterations:**
+  - STOMP WebSocket tests need `RANDOM_PORT` — `@AutoConfigureMockMvc` doesn't provide actual WS connections
+  - `RANDOM_PORT` contexts share H2 `mem:testdb` — background schedulers can pollute other tests
+  - Disable schedulers in test profile with property flags rather than removing `@EnableScheduling`
+  - Spring ApplicationEventPublisher is a clean way to decouple price updates from WS broadcasting
+  - Unit tests constructing PriceService directly need a no-op `event -> {}` publisher
 ---

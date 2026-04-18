@@ -41,7 +41,7 @@
     {
       "id": "US-008",
       "title": "WebSocket Price Push to Clients",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-009",
