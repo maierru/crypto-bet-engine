@@ -46,7 +46,7 @@
     {
       "id": "US-E09",
       "title": "CI integration",
-      "passes": false
+      "passes": true
     }
   ]
 }

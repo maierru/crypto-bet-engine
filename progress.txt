@@ -599,3 +599,19 @@
   - Run each test file separately to get per-file output; track exit code with `|| test_exit=$?`
   - Pre-existing WebSocket test failures (PriceWebSocketTest, BetWebSocketTest) are not related to E2E changes
 ---
+
+## 2026-04-18 - US-E09
+- CI integration: added `e2e-test` job to GitHub Actions workflow
+- Runs after `build-and-test` job (needs dependency)
+- Installs `google-chrome-stable` via Google apt repo (not snap)
+- Ruby 3.2 via `ruby/setup-ruby@v1` with bundler-cache for test/e2e
+- Runs `test/e2e/run.sh` which handles docker-compose + health check + test execution
+- Screenshots uploaded as artifact on failure
+- Files changed:
+  - .github/workflows/ci.yml (added e2e-test job)
+- **Learnings for future iterations:**
+  - `ruby/setup-ruby@v1` supports `working-directory` for bundler-cache to target the correct Gemfile
+  - Chrome install on Ubuntu: use Google's apt repo with GPG key, NOT `chromium-browser` snap (snap doesn't work in CI containers)
+  - Ferrum `no-sandbox` already handled in test_helper.rb via platform check — no CI-specific code needed
+  - E2E job uses docker-compose (builds app image in CI) — no separate JDK setup needed in e2e-test job
+---
