@@ -14,8 +14,14 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+import org.springframework.web.socket.sockjs.client.SockJsClient;
+import org.springframework.web.socket.sockjs.client.Transport;
+import org.springframework.web.socket.sockjs.client.WebSocketTransport;
+
+import java.util.List;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -46,11 +52,13 @@ class BetWebSocketTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        List<Transport> transports = List.of(new WebSocketTransport(new StandardWebSocketClient()));
+        WebSocketClient sockJsClient = new SockJsClient(transports);
+        stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new StringMessageConverter());
 
         session = stompClient.connectAsync(
-                "ws://localhost:" + port + "/ws",
+                "http://localhost:" + port + "/ws",
                 new StompSessionHandlerAdapter() {}
         ).get(5, TimeUnit.SECONDS);
     }

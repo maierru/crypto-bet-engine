@@ -11,7 +11,7 @@
     {
       "id": "US-F02",
       "title": "Enable SockJS Fallback on WebSocket",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F03",

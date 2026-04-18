@@ -2,6 +2,7 @@
 - Spring Boot 3.4.4 with Java 21, Gradle Kotlin DSL
 - Tests use H2 (PostgreSQL mode) + local redis-server process on port 16379
 - EmbeddedRedisConfig starts `redis-server` via ProcessBuilder (embedded-redis lib doesn't work on ARM Mac)
+- WebSocket endpoint `/ws` uses SockJS fallback — test clients must use SockJsClient with `http://` URL
 - Test profile: `@ActiveProfiles("test")`, config in `application-test.yml`
 - Flyway disabled in tests, using `ddl-auto: create-drop` with H2
 - All monetary values: `BigDecimal` in Java, `DECIMAL(19,4)` in PostgreSQL
@@ -329,4 +330,18 @@
   - Multi-stage Docker builds with Alpine JRE images keep production images small
   - Docker Compose `depends_on` with `condition: service_healthy` ensures proper startup order
   - GitHub Actions Redis service maps to 16379 to match test profile port
+---
+
+## 2026-04-18 - US-F02
+- Enabled SockJS fallback on WebSocket endpoint by adding `.withSockJS()` to StompEndpointRegistry
+- Updated PriceWebSocketTest and BetWebSocketTest to use SockJsClient transport (SockJsClient wrapping WebSocketTransport) and `http://` URL scheme instead of `ws://`
+- Files changed:
+  - src/main/java/com/cryptobet/engine/websocket/WebSocketConfig.java (added .withSockJS())
+  - src/test/java/com/cryptobet/engine/websocket/PriceWebSocketTest.java (SockJsClient transport)
+  - src/test/java/com/cryptobet/engine/websocket/BetWebSocketTest.java (SockJsClient transport)
+- **Learnings for future iterations:**
+  - SockJS requires `http://` URL scheme in test clients, not `ws://`
+  - SockJsClient wraps WebSocketTransport(StandardWebSocketClient()) — import from `org.springframework.web.socket.sockjs.client`
+  - With SockJS enabled, raw WebSocket still works under `/ws/{server}/{session}/websocket` but SockJsClient handles this transparently
+  - Frontend should use SockJS client library (CDN) connecting to `/ws` endpoint for cross-browser compatibility
 ---
