@@ -31,7 +31,7 @@
     {
       "id": "US-F06",
       "title": "Wallet Dashboard — Balance and Deposit",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F07",

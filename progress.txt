@@ -409,3 +409,16 @@
   - Frontend PRD stories may be satisfied by earlier iterations — always verify existing code before implementing
   - Wallet modal was built incrementally: HTML in US-F03, JS logic in US-F04 — both contribute to US-F05 acceptance criteria
 ---
+
+## 2026-04-18 - US-F06
+- Wallet Dashboard: most functionality already implemented in prior stories
+- Added active bet count display fetched via `GET /api/wallets/{id}/bets?status=OPEN&page=0&size=1` using `totalElements`
+- Existing features verified: nickname, balance, wallet ID (truncated), deposit form, wallet-not-found handling
+- Files changed:
+  - src/main/resources/static/js/app.js (added loadActiveBetCount, active bet count in wallet card)
+  - prd.json (US-F06 passes: true)
+- **Learnings for future iterations:**
+  - Backend uses `OPEN` status, not `PENDING` — PRD may use different terminology
+  - Use `page=0&size=1` with `totalElements` from Spring Data Page to get count without loading all records
+  - `loadActiveBetCount` exposed on `window.CryptoBet` for refresh after bet placement/settlement
+---

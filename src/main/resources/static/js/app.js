@@ -195,6 +195,10 @@
           '<div class="text--mono" style="font-size:1.3rem;color:var(--color-accent)">$' + Number(wallet.balance).toFixed(2) + '</div>' +
         '</div>' +
         '<div>' +
+          '<div style="font-size:0.8rem;color:var(--text-secondary)">Active Bets</div>' +
+          '<div class="text--mono" style="font-size:1.1rem" id="active-bet-count">—</div>' +
+        '</div>' +
+        '<div>' +
           '<div style="font-size:0.8rem;color:var(--text-secondary)">Wallet ID</div>' +
           '<div class="text--mono" style="font-size:0.8rem;color:var(--text-muted)">' + shortId + '</div>' +
         '</div>' +
@@ -209,6 +213,22 @@
       section.style.display = section.style.display === 'none' ? '' : 'none';
       document.getElementById('deposit-amount').focus();
     });
+
+    loadActiveBetCount(wallet.id);
+  }
+
+  function loadActiveBetCount(walletId) {
+    api('GET', '/api/wallets/' + walletId + '/bets?status=OPEN&page=0&size=1')
+      .then(function (page) {
+        var countEl = document.getElementById('active-bet-count');
+        if (countEl) {
+          countEl.textContent = page.totalElements || 0;
+        }
+      })
+      .catch(function () {
+        var countEl = document.getElementById('active-bet-count');
+        if (countEl) countEl.textContent = '0';
+      });
   }
 
   // --- Deposit ---
@@ -345,6 +365,7 @@
     clearStoredWallet: clearStoredWallet,
     updateWalletIndicator: updateWalletIndicator,
     loadWalletDetails: loadWalletDetails,
+    loadActiveBetCount: loadActiveBetCount,
     showWalletModal: showWalletModal,
     escapeHtml: escapeHtml,
     wsConnect: wsConnect,
