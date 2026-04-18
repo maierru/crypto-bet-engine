@@ -558,39 +558,69 @@
     betSubmitBtn.disabled = !symbol || !selectedDirection || !currentOdds || !amount || amount < 1;
   }
 
+  var betConfirmModal = document.getElementById('bet-confirm-modal');
+  var betConfirmDetails = document.getElementById('bet-confirm-details');
+  var betConfirmBtn = document.getElementById('bet-confirm-btn');
+  var betCancelBtn = document.getElementById('bet-cancel-btn');
+  var pendingBet = null;
+
   betSubmitBtn.addEventListener('click', function () {
     var stored = getStoredWallet();
     if (!stored) return;
 
     var symbol = betSymbolEl.value;
     var amount = parseFloat(betAmountEl.value);
-
     if (!symbol || !selectedDirection || !amount || amount < 1) return;
 
-    betFormError.textContent = '';
-    betSubmitBtn.disabled = true;
-
-    api('POST', '/api/bets', {
+    pendingBet = {
       walletId: stored.id,
       symbol: symbol,
       direction: selectedDirection,
       amount: amount
-    })
+    };
+
+    var payout = currentOdds ? (amount * currentOdds).toFixed(2) : '—';
+    betConfirmDetails.innerHTML =
+      '<div class="bet-confirm__row"><span class="text--muted">Symbol</span><span class="text--mono">' + escapeHtml(symbol) + '</span></div>' +
+      '<div class="bet-confirm__row"><span class="text--muted">Direction</span><span class="' + (selectedDirection === 'UP' ? 'text--up' : 'text--down') + '">' + selectedDirection + '</span></div>' +
+      '<div class="bet-confirm__row"><span class="text--muted">Amount</span><span class="text--mono">$' + amount.toFixed(2) + '</span></div>' +
+      '<div class="bet-confirm__row"><span class="text--muted">Odds</span><span class="text--mono">' + (currentOdds ? currentOdds.toFixed(4) : '—') + '</span></div>' +
+      '<div class="bet-confirm__row"><span class="text--muted">Est. Payout</span><span class="text--mono text--up">$' + payout + '</span></div>';
+
+    betConfirmModal.style.display = '';
+  });
+
+  betCancelBtn.addEventListener('click', function () {
+    betConfirmModal.style.display = 'none';
+    pendingBet = null;
+  });
+
+  betConfirmBtn.addEventListener('click', function () {
+    if (!pendingBet) return;
+
+    betConfirmBtn.disabled = true;
+    betFormError.textContent = '';
+
+    api('POST', '/api/bets', pendingBet)
       .then(function () {
-        showToast('Bet placed! ' + selectedDirection + ' ' + symbol + ' for $' + amount.toFixed(2), 'success');
+        showToast('Bet placed! ' + pendingBet.direction + ' ' + pendingBet.symbol + ' for $' + pendingBet.amount.toFixed(2), 'success');
+        betConfirmModal.style.display = 'none';
         betAmountEl.value = '';
         currentOdds = null;
         betInfoEl.style.display = 'none';
         betDirBtns.forEach(function (b) { b.classList.remove('bet-dir-btn--active'); });
         selectedDirection = null;
         betSubmitBtn.disabled = true;
+        pendingBet = null;
         loadWalletDetails();
       })
       .catch(function (err) {
+        betConfirmModal.style.display = 'none';
         betFormError.textContent = err.message;
+        pendingBet = null;
       })
       .finally(function () {
-        betSubmitBtn.disabled = false;
+        betConfirmBtn.disabled = false;
         validateBetForm();
       });
   });

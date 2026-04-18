@@ -472,3 +472,19 @@
   - Form reset after successful bet: clear all fields, hide info panel, deselect direction
   - `loadWalletDetails()` refreshes both balance and active bet count after bet placement
 ---
+
+## 2026-04-18 - US-F10
+- Bet confirmation modal: shows summary (symbol, direction, amount, odds, est. payout) before submitting
+- Place Bet button now opens confirmation modal instead of submitting directly
+- Confirm button submits the bet, Cancel closes modal
+- On success: toast + form reset + wallet refresh; on error: modal closes + error shown in form
+- Files changed:
+  - src/main/resources/static/index.html (bet confirmation modal HTML)
+  - src/main/resources/static/css/style.css (confirmation detail rows)
+  - src/main/resources/static/js/app.js (confirmation flow: pendingBet, confirm/cancel handlers)
+  - prd.json (US-F10 passes: true)
+- **Learnings for future iterations:**
+  - Confirmation modal reuses the `.modal-overlay` / `.modal` pattern from wallet creation
+  - `pendingBet` object stores bet params between Place Bet click and Confirm click
+  - Confirm button disabled during API call to prevent double-submit
+---

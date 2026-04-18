@@ -51,7 +51,7 @@
     {
       "id": "US-F10",
       "title": "Bet Placement Confirmation and Submission",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F11",

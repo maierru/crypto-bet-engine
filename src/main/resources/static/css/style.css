@@ -556,6 +556,25 @@ body {
   font-size: 0.9rem;
 }
 
+/* Bet confirmation */
+.bet-confirm__details {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.bet-confirm__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.9rem;
+}
+
+.bet-confirm__row:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
 /* Responsive: mobile (<768px) */
 @media (max-width: 767px) {
   .sidebar {

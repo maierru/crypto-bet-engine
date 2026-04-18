@@ -143,6 +143,19 @@
     </main>
   </div>
 
+  <!-- Bet Confirmation Modal -->
+  <div class="modal-overlay" id="bet-confirm-modal" style="display:none;">
+    <div class="modal">
+      <h2 class="modal__title">Confirm Bet</h2>
+      <p class="modal__subtitle">Review your bet before placing</p>
+      <div class="bet-confirm__details" id="bet-confirm-details"></div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn btn--primary" id="bet-confirm-btn" style="flex:1">Confirm</button>
+        <button class="btn btn--ghost" id="bet-cancel-btn" style="flex:1">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Wallet Creation Modal -->
   <div class="modal-overlay" id="wallet-modal" style="display:none;">
     <div class="modal">
