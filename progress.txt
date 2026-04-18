@@ -48,6 +48,10 @@
 - Frontend: `window.CryptoBet` exposes shared functions (api, showToast, getStoredWallet, etc.) for cross-module use
 - Frontend: CSS custom properties in `:root` for theme colors — use `var(--color-up)`, `var(--color-down)`, etc.
 - Frontend: wallet state in localStorage (`walletId`, `walletNickname`) — check on init, show modal if absent
+- Frontend: WebSocket uses `StompJs.Client` with `SockJS` factory — `wsConnect()` activates, `wsSubscribe(topic, cb)` registers listeners
+- Frontend: `window.CryptoBet` exposes `wsConnect`, `wsDisconnect`, `wsSubscribe`, `wsUnsubscribe` for cross-module use
+- Frontend: connection status dot in header — green (connected), yellow pulsing (connecting), red (disconnected)
+- Frontend: deposit form is inline in wallet card, toggled by Deposit button rendered in `renderWalletCard()`
 
 ---
 
@@ -371,4 +375,25 @@
   - Modal uses `style="display:none"` + JS toggle rather than CSS class to prevent flash on load
   - JetBrains Mono from Google Fonts for monospace prices — preconnect hints in HTML head
   - Mobile layout uses bottom fixed nav bar (common mobile UX pattern for trading apps)
+---
+
+## 2026-04-18 - US-F04
+- JavaScript foundation: WebSocket connection manager, deposit form, enhanced init
+- SockJS + STOMP.js CDN scripts added to index.html
+- WebSocket connection manager using StompJs.Client with SockJS factory
+- Auto-reconnect with 5s delay, connection status indicator (green/yellow/red dot in header)
+- Subscribe/unsubscribe API exposed via `window.CryptoBet` for future stories
+- Deposit form: inline in wallet card, toggle via Deposit button, calls POST /api/wallets/{id}/deposit
+- Enhanced init: connects WebSocket after wallet loads; also connects after wallet creation
+- Files changed:
+  - src/main/resources/static/index.html (CDN scripts, connection indicator, deposit form HTML)
+  - src/main/resources/static/css/style.css (connection status dot, deposit form styles)
+  - src/main/resources/static/js/app.js (WebSocket manager, deposit logic, enhanced init)
+  - prd.json (US-F04 passes: true)
+- **Learnings for future iterations:**
+  - `StompJs.Client` with `webSocketFactory: () => new SockJS('/ws')` is the correct pattern for SockJS+STOMP
+  - `reconnectDelay: 5000` on StompJs.Client handles auto-reconnect natively — no manual timer needed
+  - Subscriptions stored in a map and re-applied on reconnect via `onConnect` callback
+  - Deposit form is toggled inline rather than using a modal — simpler UX for frequent actions
+  - `clearStoredWallet()` helper added to centralize localStorage cleanup
 ---

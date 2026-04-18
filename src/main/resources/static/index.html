@@ -16,10 +16,13 @@
       <span class="header__logo">&#9670;</span>
       <h1 class="header__title">Crypto Bet Engine</h1>
     </div>
-    <div class="header__wallet" id="wallet-indicator">
-      <span class="header__wallet-icon">&#128179;</span>
-      <span class="header__wallet-name" id="wallet-name">No Wallet</span>
-      <span class="header__wallet-balance" id="wallet-balance"></span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="conn-status conn-status--disconnected" id="conn-status" title="Disconnected"></span>
+      <div class="header__wallet" id="wallet-indicator">
+        <span class="header__wallet-icon">&#128179;</span>
+        <span class="header__wallet-name" id="wallet-name">No Wallet</span>
+        <span class="header__wallet-balance" id="wallet-balance"></span>
+      </div>
     </div>
   </header>
 
@@ -53,6 +56,14 @@
           <div class="card__header">Wallet</div>
           <div class="card__body" id="wallet-details">
             <p class="text--muted">Create a wallet to get started.</p>
+          </div>
+          <div class="card__body deposit-section" id="deposit-section" style="display:none;border-top:1px solid var(--border-color)">
+            <form id="deposit-form" class="deposit-form">
+              <input class="form__input form__input--mono deposit-form__input" type="number" id="deposit-amount" placeholder="Amount" min="0.01" step="0.01" required>
+              <button class="btn btn--primary btn--sm" type="submit">Deposit</button>
+              <button class="btn btn--ghost btn--sm" type="button" id="deposit-cancel">Cancel</button>
+            </form>
+            <div class="form__error" id="deposit-error"></div>
           </div>
         </div>
 
@@ -117,6 +128,8 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

@@ -21,7 +21,7 @@
     {
       "id": "US-F04",
       "title": "JavaScript Foundation — API Client and App Init",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F05",

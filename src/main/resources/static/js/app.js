@@ -76,6 +76,7 @@
           throw new Error(msg);
         });
       }
+      if (res.status === 204) return null;
       return res.json();
     });
   }
@@ -94,6 +95,11 @@
   function storeWallet(id, nickname) {
     localStorage.setItem('walletId', id);
     localStorage.setItem('walletNickname', nickname);
+  }
+
+  function clearStoredWallet() {
+    localStorage.removeItem('walletId');
+    localStorage.removeItem('walletNickname');
   }
 
   function updateWalletIndicator(nickname, balance) {
@@ -147,6 +153,7 @@
         hideWalletModal();
         showToast('Wallet created!', 'success');
         loadWalletDetails();
+        wsConnect();
       })
       .catch(function (err) {
         walletFormError.textContent = err.message;
@@ -168,8 +175,7 @@
         renderWalletCard(wallet);
       })
       .catch(function () {
-        localStorage.removeItem('walletId');
-        localStorage.removeItem('walletNickname');
+        clearStoredWallet();
         updateWalletIndicator(null);
         showWalletModal();
       });
@@ -192,7 +198,132 @@
           '<div style="font-size:0.8rem;color:var(--text-secondary)">Wallet ID</div>' +
           '<div class="text--mono" style="font-size:0.8rem;color:var(--text-muted)">' + shortId + '</div>' +
         '</div>' +
+        '<div>' +
+          '<button class="btn btn--primary btn--sm" id="deposit-toggle-btn">Deposit</button>' +
+        '</div>' +
       '</div>';
+
+    var depositBtn = document.getElementById('deposit-toggle-btn');
+    depositBtn.addEventListener('click', function () {
+      var section = document.getElementById('deposit-section');
+      section.style.display = section.style.display === 'none' ? '' : 'none';
+      document.getElementById('deposit-amount').focus();
+    });
+  }
+
+  // --- Deposit ---
+
+  var depositForm = document.getElementById('deposit-form');
+  var depositError = document.getElementById('deposit-error');
+  var depositCancel = document.getElementById('deposit-cancel');
+
+  depositForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    depositError.textContent = '';
+
+    var stored = getStoredWallet();
+    if (!stored) return;
+
+    var amount = parseFloat(document.getElementById('deposit-amount').value);
+    if (!amount || amount <= 0) {
+      depositError.textContent = 'Amount must be greater than 0.';
+      return;
+    }
+
+    var submitBtn = depositForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    api('POST', '/api/wallets/' + stored.id + '/deposit', { amount: amount })
+      .then(function (wallet) {
+        updateWalletIndicator(wallet.nickname || stored.nickname, wallet.balance);
+        renderWalletCard(wallet);
+        document.getElementById('deposit-section').style.display = 'none';
+        document.getElementById('deposit-amount').value = '';
+        showToast('Deposited $' + amount.toFixed(2), 'success');
+      })
+      .catch(function (err) {
+        depositError.textContent = err.message;
+      })
+      .finally(function () {
+        submitBtn.disabled = false;
+      });
+  });
+
+  depositCancel.addEventListener('click', function () {
+    document.getElementById('deposit-section').style.display = 'none';
+    document.getElementById('deposit-amount').value = '';
+    depositError.textContent = '';
+  });
+
+  // --- WebSocket Connection Manager ---
+
+  var stompClient = null;
+  var wsReconnectTimer = null;
+  var wsSubscriptions = {};
+  var connStatusEl = document.getElementById('conn-status');
+
+  function setConnStatus(status) {
+    connStatusEl.className = 'conn-status conn-status--' + status;
+    var labels = { connected: 'Connected', connecting: 'Connecting...', disconnected: 'Disconnected' };
+    connStatusEl.title = labels[status] || status;
+  }
+
+  function wsConnect() {
+    var stored = getStoredWallet();
+    if (!stored) return;
+
+    if (stompClient && stompClient.connected) return;
+
+    setConnStatus('connecting');
+
+    var socket = new SockJS('/ws');
+    stompClient = new StompJs.Client({
+      webSocketFactory: function () { return socket; },
+      reconnectDelay: 5000,
+      onConnect: function () {
+        setConnStatus('connected');
+        // Re-subscribe all registered subscriptions
+        Object.keys(wsSubscriptions).forEach(function (topic) {
+          var cb = wsSubscriptions[topic].callback;
+          wsSubscriptions[topic].sub = stompClient.subscribe(topic, function (msg) {
+            cb(JSON.parse(msg.body));
+          });
+        });
+      },
+      onStompError: function () {
+        setConnStatus('disconnected');
+      },
+      onWebSocketClose: function () {
+        setConnStatus('disconnected');
+      }
+    });
+
+    stompClient.activate();
+  }
+
+  function wsDisconnect() {
+    if (stompClient) {
+      stompClient.deactivate();
+      stompClient = null;
+    }
+    wsSubscriptions = {};
+    setConnStatus('disconnected');
+  }
+
+  function wsSubscribe(topic, callback) {
+    wsSubscriptions[topic] = { callback: callback, sub: null };
+    if (stompClient && stompClient.connected) {
+      wsSubscriptions[topic].sub = stompClient.subscribe(topic, function (msg) {
+        callback(JSON.parse(msg.body));
+      });
+    }
+  }
+
+  function wsUnsubscribe(topic) {
+    if (wsSubscriptions[topic] && wsSubscriptions[topic].sub) {
+      wsSubscriptions[topic].sub.unsubscribe();
+    }
+    delete wsSubscriptions[topic];
   }
 
   // --- Utility ---
@@ -211,10 +342,15 @@
     switchView: switchView,
     getStoredWallet: getStoredWallet,
     storeWallet: storeWallet,
+    clearStoredWallet: clearStoredWallet,
     updateWalletIndicator: updateWalletIndicator,
     loadWalletDetails: loadWalletDetails,
     showWalletModal: showWalletModal,
-    escapeHtml: escapeHtml
+    escapeHtml: escapeHtml,
+    wsConnect: wsConnect,
+    wsDisconnect: wsDisconnect,
+    wsSubscribe: wsSubscribe,
+    wsUnsubscribe: wsUnsubscribe
   };
 
   // --- Init ---
@@ -226,6 +362,7 @@
     } else {
       updateWalletIndicator(stored.nickname);
       loadWalletDetails();
+      wsConnect();
     }
   }
 

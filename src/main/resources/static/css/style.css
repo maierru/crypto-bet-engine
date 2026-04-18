@@ -417,6 +417,45 @@ body {
   to { opacity: 0; transform: translateX(40px); }
 }
 
+/* Connection status indicator */
+.conn-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.conn-status--connected {
+  background: var(--color-up);
+  box-shadow: 0 0 6px var(--color-up);
+}
+
+.conn-status--connecting {
+  background: var(--color-push);
+  animation: pulse-dot 1.2s infinite;
+}
+
+.conn-status--disconnected {
+  background: var(--color-down);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Deposit form */
+.deposit-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deposit-form__input {
+  max-width: 160px;
+}
+
 /* Price flash animations */
 @keyframes flash-up {
   0% { color: var(--color-up); }
