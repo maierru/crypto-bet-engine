@@ -488,3 +488,18 @@
   - `pendingBet` object stores bet params between Place Bet click and Confirm click
   - Confirm button disabled during API call to prevent double-submit
 ---
+
+## 2026-04-18 - US-F11
+- Active bets display: fetches OPEN bets, renders list with symbol, direction, amount, countdown
+- Countdown timer updates every second showing mm:ss until resolveAt, then "Settling..."
+- Auto-loads after wallet details load; refreshes on bet placement
+- Empty state: "No active bets — place one above!"
+- Files changed:
+  - src/main/resources/static/js/app.js (loadActiveBets, renderActiveBets, updateCountdowns)
+  - src/main/resources/static/css/style.css (active bet card styles, countdown)
+  - prd.json (US-F11 passes: true)
+- **Learnings for future iterations:**
+  - Backend `resolveAt` is ISO datetime — parse with `new Date()` for countdown calculation
+  - `setInterval` for countdown cleanup: clear previous interval before starting new one to avoid leaks
+  - Active bets loaded inside `loadWalletDetails()` success callback to ensure wallet context exists
+---

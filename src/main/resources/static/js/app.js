@@ -173,6 +173,7 @@
       .then(function (wallet) {
         updateWalletIndicator(wallet.nickname || stored.nickname, wallet.balance);
         renderWalletCard(wallet);
+        loadActiveBets();
       })
       .catch(function () {
         clearStoredWallet();
@@ -625,6 +626,76 @@
       });
   });
 
+  // --- Active Bets Display ---
+
+  var activeBetsContainer = document.getElementById('active-bets');
+  var countdownInterval = null;
+
+  function loadActiveBets() {
+    var stored = getStoredWallet();
+    if (!stored) return;
+
+    api('GET', '/api/wallets/' + stored.id + '/bets?status=OPEN&page=0&size=10')
+      .then(function (page) {
+        renderActiveBets(page.content || []);
+      })
+      .catch(function () {
+        activeBetsContainer.innerHTML = '<p class="text--muted">Failed to load active bets.</p>';
+      });
+  }
+
+  function renderActiveBets(bets) {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    if (!bets || bets.length === 0) {
+      activeBetsContainer.innerHTML = '<p class="text--muted">No active bets \u2014 place one above!</p>';
+      return;
+    }
+
+    var html = '<div class="active-bets__list">';
+    bets.forEach(function (bet) {
+      var dirClass = bet.direction === 'UP' ? 'text--up' : 'text--down';
+      var dirArrow = bet.direction === 'UP' ? '\u25B2' : '\u25BC';
+      html +=
+        '<div class="active-bet" data-resolve="' + escapeHtml(bet.resolveAt || '') + '">' +
+          '<div>' +
+            '<span class="active-bet__symbol">' + escapeHtml(bet.symbol) + '</span> ' +
+            '<span class="' + dirClass + '">' + dirArrow + ' ' + bet.direction + '</span>' +
+          '</div>' +
+          '<div class="active-bet__info">' +
+            '<span class="text--mono">$' + Number(bet.amount).toFixed(2) + '</span>' +
+            '<span class="active-bet__countdown" data-resolve="' + escapeHtml(bet.resolveAt || '') + '"></span>' +
+          '</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    activeBetsContainer.innerHTML = html;
+
+    updateCountdowns();
+    countdownInterval = setInterval(updateCountdowns, 1000);
+  }
+
+  function updateCountdowns() {
+    var els = activeBetsContainer.querySelectorAll('.active-bet__countdown[data-resolve]');
+    var now = Date.now();
+    els.forEach(function (el) {
+      var resolveAt = el.getAttribute('data-resolve');
+      if (!resolveAt) { el.textContent = ''; return; }
+      var diff = new Date(resolveAt).getTime() - now;
+      if (diff <= 0) {
+        el.textContent = 'Settling...';
+      } else {
+        var secs = Math.ceil(diff / 1000);
+        var mins = Math.floor(secs / 60);
+        var s = secs % 60;
+        el.textContent = mins + ':' + (s < 10 ? '0' : '') + s;
+      }
+    });
+  }
+
   // --- Utility ---
 
   function escapeHtml(str) {
@@ -645,6 +716,7 @@
     updateWalletIndicator: updateWalletIndicator,
     loadWalletDetails: loadWalletDetails,
     loadActiveBetCount: loadActiveBetCount,
+    loadActiveBets: loadActiveBets,
     showWalletModal: showWalletModal,
     escapeHtml: escapeHtml,
     handlePriceUpdate: handlePriceUpdate,

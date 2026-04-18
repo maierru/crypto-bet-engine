@@ -56,7 +56,7 @@
     {
       "id": "US-F11",
       "title": "Active Bets Display on Dashboard",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-F12",

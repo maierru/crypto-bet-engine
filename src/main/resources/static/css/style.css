@@ -575,6 +575,42 @@ body {
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Active bets */
+.active-bets__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.active-bet {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-accent);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.active-bet__symbol {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.active-bet__info {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+}
+
+.active-bet__countdown {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-push);
+}
+
 /* Responsive: mobile (<768px) */
 @media (max-width: 767px) {
   .sidebar {
