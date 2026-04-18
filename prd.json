@@ -56,7 +56,7 @@
     {
       "id": "US-011",
       "title": "Global Error Handling and Validation",
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-012",

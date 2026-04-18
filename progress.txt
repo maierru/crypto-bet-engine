@@ -33,6 +33,11 @@
 - Settlement scheduler disabled in tests via `settlement.scheduling-enabled: false` to avoid cross-context interference
 - Tests using `RANDOM_PORT` share H2 in-memory DB — disable background schedulers to prevent test pollution
 - Redis keys must be cleaned in `@BeforeEach` when tests assert on Redis state (not just DB)
+- Global error handling via `@ControllerAdvice` in `com.cryptobet.engine.error.GlobalExceptionHandler` — no local `@ExceptionHandler` on controllers
+- Error response format: `{"error":"CODE","message":"...","details":{...}}` via `ErrorResponse` record
+- Bean Validation on all request DTOs: `@NotNull`, `@Positive`, `@NotBlank` etc. with `@Valid` on controller `@RequestBody`
+- Insufficient balance throws `InsufficientBalanceException` (409 Conflict), not `IllegalArgumentException`
+- Validation errors return 400 with `VALIDATION_ERROR` code and field-level details map
 
 ---
 
@@ -265,4 +270,36 @@
   - Wallet-scoped topics (`/topic/bets/{walletId}`) ensure clients only get their own updates
   - BetUpdateEvent uses a public `publishBetUpdate()` method for both @EventListener and direct test invocation
   - SettlementService computes payout amount (potentialPayout for WON, stake for PUSH, zero for LOST) before publishing event
+---
+
+## 2026-04-18 - US-011
+- Global error handling and validation: consistent error responses across all endpoints
+- `@ControllerAdvice` GlobalExceptionHandler handles all exceptions uniformly
+- ErrorResponse record: `{"error":"CODE","message":"...","details":{...}}`
+- Bean Validation annotations on all request DTOs (CreateWalletRequest, DepositRequest, PlaceBetRequest)
+- InsufficientBalanceException replaces IllegalArgumentException for balance errors (409 Conflict)
+- Removed all local `@ExceptionHandler` methods from WalletController, BetController, OddsController
+- TDD: 8 tests (validation errors, not found format, insufficient balance 409, no stack trace leak)
+- Files changed:
+  - build.gradle.kts (added spring-boot-starter-validation)
+  - src/main/java/com/cryptobet/engine/error/ErrorResponse.java (new)
+  - src/main/java/com/cryptobet/engine/error/GlobalExceptionHandler.java (new)
+  - src/main/java/com/cryptobet/engine/error/InsufficientBalanceException.java (new)
+  - src/main/java/com/cryptobet/engine/wallet/dto/CreateWalletRequest.java (added validation)
+  - src/main/java/com/cryptobet/engine/wallet/dto/DepositRequest.java (added validation)
+  - src/main/java/com/cryptobet/engine/bet/dto/PlaceBetRequest.java (added validation)
+  - src/main/java/com/cryptobet/engine/wallet/WalletController.java (removed @ExceptionHandler, added @Valid)
+  - src/main/java/com/cryptobet/engine/bet/BetController.java (removed @ExceptionHandler, added @Valid)
+  - src/main/java/com/cryptobet/engine/odds/OddsController.java (removed @ExceptionHandler)
+  - src/main/java/com/cryptobet/engine/wallet/Wallet.java (throws InsufficientBalanceException)
+  - src/main/java/com/cryptobet/engine/wallet/WalletService.java (removed manual validation)
+  - src/main/java/com/cryptobet/engine/bet/BetService.java (removed manual validation)
+  - src/test/java/com/cryptobet/engine/error/GlobalErrorHandlingTest.java (new)
+  - src/test/java/com/cryptobet/engine/bet/BetControllerTest.java (updated insufficient balance to 409)
+- **Learnings for future iterations:**
+  - `@ControllerAdvice` catches all controller exceptions globally — no need for per-controller handlers
+  - Bean Validation replaces manual `if (amount <= 0)` checks — handled at controller layer before service
+  - InsufficientBalanceException is a domain exception in `error` package, thrown from Wallet entity
+  - `MethodArgumentNotValidException` provides field-level errors via `getBindingResult().getFieldErrors()`
+  - Existing tests may need updating when error codes change (e.g., insufficient balance 400→409)
 ---
