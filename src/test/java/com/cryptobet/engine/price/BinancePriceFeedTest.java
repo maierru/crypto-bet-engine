@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BinancePriceFeedTest {
 
@@ -69,5 +70,36 @@ class BinancePriceFeedTest {
         priceFeed.handleMessage(message);
 
         assertEquals(new BigDecimal("65000.50"), priceService.getPrice("BTCUSDT").orElseThrow());
+    }
+
+    @Test
+    void reconnectDelay_firstAttempt_is5Seconds() {
+        assertEquals(5, BinancePriceFeed.calculateReconnectDelay(0));
+    }
+
+    @Test
+    void reconnectDelay_secondAttempt_is10Seconds() {
+        assertEquals(10, BinancePriceFeed.calculateReconnectDelay(1));
+    }
+
+    @Test
+    void reconnectDelay_cappedAt300Seconds() {
+        // After many failures, should not exceed 300s (5 min)
+        assertEquals(300, BinancePriceFeed.calculateReconnectDelay(10));
+        assertEquals(300, BinancePriceFeed.calculateReconnectDelay(20));
+    }
+
+    @Test
+    void reconnectDelay_growsExponentially() {
+        long delay0 = BinancePriceFeed.calculateReconnectDelay(0);
+        long delay1 = BinancePriceFeed.calculateReconnectDelay(1);
+        long delay2 = BinancePriceFeed.calculateReconnectDelay(2);
+
+        assertTrue(delay1 > delay0, "delay should grow");
+        assertTrue(delay2 > delay1, "delay should keep growing");
+        // 5, 10, 20, 40, 80, 160, 300(cap)
+        assertEquals(5, delay0);
+        assertEquals(10, delay1);
+        assertEquals(20, delay2);
     }
 }

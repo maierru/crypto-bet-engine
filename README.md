@@ -148,8 +148,5 @@ scripts/ralph/
 
 ## Design Docs
 
-See [docs/DESIGN.md](docs/DESIGN.md) for:
-- Betting mechanics (odds, vigorish, settlement)
-- Architecture (single + multi-instance)
-- Java vs Ruby comparison
-- Risk management and exposure tracking
+- [docs/DESIGN.md](docs/DESIGN.md) — Betting mechanics, architecture, Java vs Ruby comparison
+- [docs/swim-lanes.md](docs/swim-lanes.md) — Swim lane diagrams: component interactions, data flow per operation

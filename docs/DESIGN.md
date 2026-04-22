@@ -194,6 +194,14 @@ Cashout price = function of current probability + time to resolve + house margin
 
 ---
 
+## Swim Lane Diagrams
+
+See [swim-lanes.md](swim-lanes.md) for detailed Mermaid sequence diagrams covering:
+- Place Bet flow (with pessimistic locking)
+- Price Update flow (Binance → WebSocket clients)
+- Settlement flow (background scheduler)
+- Wallet operations
+
 ## Single Instance Architecture
 
 ```
